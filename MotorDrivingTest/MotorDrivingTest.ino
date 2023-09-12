@@ -7,9 +7,16 @@
 
 #define BTN_PIN 7
 
-int target = -12144;
+int zeroTarget = 0;
+int target = 14000; // -12144
+
+bool buttonState = 0;
+bool lastButtonState = 0;
 
 int pos = 0; 
+
+int dirDown = -1;
+int dirUp = 1;
 
 void setup() {
   Serial.begin(9600);
@@ -28,14 +35,38 @@ void loop() {
       pos = 0;
       delay(2000);
   } 
+  
+  
 
+  switch (setPosition) {
+  case goToBottom:
+    if (pos > target + 50){
+    setMotor(dirDown, 30, PWM, In1, In2);
+    }
+    else if (pos < target - 50){
+      setMotor(dirUp, 30, PWM, In1, In2);
+    }
+    else{
+      setMotor(0, 0, PWM, In1, In2);
+    }
+    break;
+  case goToTop:
+    if (pos > zeroTarget + 50){
+    setMotor(dirDown, 30, PWM, In1, In2);
+    }
+    else if (pos < zeroTarget - 50){
+      setMotor(dirUp, 30, PWM, In1, In2);
+    }
+    else{
+      setMotor(0, 0, PWM, In1, In2);
+    }
+    break;
+  //default:
+    // statements
+  //  break;
+}
 
-  if (pos > target){
-    setMotor(-1, 30, PWM, In1, In2);
-  }
-  else{
-    setMotor(0, 0, PWM, In1, In2);
-  }
+  
 
   //if (!button_state) setMotor(1, 30, PWM, In1, In2);    // Lift the egg
   //else setMotor(-1, 25, PWM, In1, In2);                 // Drop the egg
@@ -87,11 +118,11 @@ void readLO(){
 
 void setMotor(int dir, int pwmVal, int pwm, int in1, int in2){
   analogWrite(pwm, pwmVal);
-  if (dir == 1){
+  if (dir == dirUp){
     digitalWrite(in1, HIGH);
     digitalWrite(in2, LOW);
   }
-  else if (dir == -1){
+  else if (dir == dirDown){
     digitalWrite(in1, LOW);
     digitalWrite(in2, HIGH);
   }
