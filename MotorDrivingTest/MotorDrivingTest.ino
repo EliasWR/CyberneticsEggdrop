@@ -7,17 +7,19 @@
 
 #define BTN_PIN 7
 
-// Encoder to mm function
+// 5 forksjellige targets
+// Target pos
 
-
-// Timestamp; Target; MotorPWM; Encoder;
+int targetNum = 0;
+int targetList[] = {5000, 7000, 9000, 10000, 11000};
 
 unsigned long nextTimeout = 0;
 unsigned long stateTimer;
 
 int motorSpeed = 0;
 unsigned long timestamp = 0;
-int zeroTarget = 0;
+int targetPos = 0;
+const int zeroTarget = 0;
 int target = 11000; // 12100; // -12144
 
 bool buttonState = LOW;
@@ -45,19 +47,17 @@ void setup() {
 void loop() {
   
   buttonState = digitalRead(BTN_PIN);             // Active low
-  //if (!button_state){
-  //    pos = 0;
-  //    delay(2000);
-  //} 
   
   if (buttonState == HIGH && lastButtonState == LOW) {
     setPosition += 1;
     setPosition %= 2;
+    targetNum += 1;
+    targetNum %= 5;
+    target = targetList[targetNum];
   }
   
   switch (setPosition) {
   case goToTop:
-    
     if (pos > zeroTarget + 200){
     setMotor(dirDown, 30, PWM, In1, In2);
     }
@@ -67,17 +67,19 @@ void loop() {
     else{
       setMotor(0, 0, PWM, In1, In2);
     }
+    targetPos = zeroTarget;
     break;
   case goToBottom:
     if (pos > target + 150){
-      setMotor(dirDown, 70, PWM, In1, In2);
+      setMotor(dirDown, 60, PWM, In1, In2);
     }
     else if (pos < target - 150){
-      setMotor(dirUp, 70, PWM, In1, In2);
+      setMotor(dirUp, 60, PWM, In1, In2);
     }
     else{
       setMotor(0, 0, PWM, In1, In2);
     }
+    targetPos = target;
     break;
   //default:
     // statements
@@ -90,7 +92,7 @@ void loop() {
     startTimer(100);
     Serial.print(millis());
     Serial.print(", ");
-    Serial.print(target);
+    Serial.print(targetPos);
     Serial.print(", ");
     Serial.print(motorSpeed);
     Serial.print(", ");
@@ -146,11 +148,6 @@ void readEncoder(){
   else{
     pos--;
   }
-}
-
-void readLO(){
-  Serial.print(digitalRead(39));
-  Serial.println(digitalRead(37));
 }
 
 void setMotor(int dir, int pwmVal, int pwm, int in1, int in2){
