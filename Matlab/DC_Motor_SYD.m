@@ -5,22 +5,31 @@
 clear; clc; close all;
 
 %% Import dataset
-filename = "DC-Motor-data.csv";
-dataset = importdata(filename);
+filename = "serial_data.csv";
+dataset = importdata(filename, ',').data;
 
 %% Manipulate data
 
 Timestamp_raw = dataset(:, 1); % ms after startup [ms]
-PWM_raw = dataset(:, 2); % PWM-signal to motor 
-Target_raw = dataset(:, 3); % Target position
+Target_raw = dataset(:, 2); % Target position
+PWM_raw = dataset(:, 3); % PWM-signal to motor 
 Actual_raw = dataset(:, 4); % Actual position (encoder value)
+
+
+% Skalere input fra encoder
+enc_Zero = 0;
+enc_Limit = 12144;
+cm_Zero = 0;
+cm_Limit = 20;
+Target_scaled = simpleScale(Target_raw, enc_Zero, enc_Limit, cm_Zero, cm_Limit)
+Actual_scaled = (Actual_raw - enc_Zero) / (enc_Limit - enc_Zero) * (cm_Limit-cm_Zero) + cm_Zero; 
 
 Input_voltage = PWM_raw * 5/255; % PWM converted to voltage [V]
 
 %% Sampling time from timestamps
 
-timestamp = zeros(length(time_raw),1);
-Ts_vect = zeros(length(time_raw),1);
+timestamp = zeros(length(Timestamp_raw),1);
+Ts_vect = zeros(length(Timestamp_raw)-1,1);
 
 for i = 2:length(Timestamp_raw)
      Ts = Timestamp_raw(i) - Timestamp_raw(i-1);
@@ -46,22 +55,22 @@ Ts = round(Ts_average)*10^-3;
 disp(Ts)
 
 %% Structure as iddata for SystemIdentification
-% Format: (Input, Output, Sample time)
+% Format: (Output, Input, Sample time)
 
-DC_Motor_DATA = iddata(Input_voltage, Actual_raw, Ts);
+DC_Motor_DATA = iddata(Actual_scaled, Input_voltage, Ts);
 
 %% Visualizing the data
 
 figure(1)
 
 subplot(2,1,1)
-plot(timestamp, Input_voltage)
+plot(timestamp, Target_scaled)
 grid on
 xlabel('time [s]')
-ylabel('Voltage [V]')
+ylabel('Target position')
 
 subplot(2,1,2)
-plot(time, Actual_raw)
+plot(timestamp, Actual_scaled)
 grid on
 xlabel('time [s]')
 ylabel('Encoder position')
