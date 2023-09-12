@@ -8,10 +8,14 @@
 #define BTN_PIN 7
 
 int zeroTarget = 0;
-int target = 14000; // -12144
+int target = 12000; // 12100; // -12144
 
-bool buttonState = 0;
-bool lastButtonState = 0;
+bool buttonState = LOW;
+bool lastButtonState = LOW;
+
+int setPosition = 0;
+const int goToTop = 0;
+const int goToBottom = 1;
 
 int pos = 0; 
 
@@ -30,32 +34,35 @@ void setup() {
 
 void loop() {
   
-  bool button_state = digitalRead(BTN_PIN);             // Active low
-  if (!button_state){
-      pos = 0;
-      delay(2000);
-  } 
+  buttonState = digitalRead(BTN_PIN);             // Active low
+  //if (!button_state){
+  //    pos = 0;
+  //    delay(2000);
+  //} 
   
+  if (buttonState == HIGH && lastButtonState == LOW) {
+    setPosition += 1;
+    setPosition %= 2;
+  }
   
-
   switch (setPosition) {
-  case goToBottom:
-    if (pos > target + 50){
-    setMotor(dirDown, 30, PWM, In1, In2);
+  case goToTop:
+    if (pos > zeroTarget + 25){
+    setMotor(dirDown, 40, PWM, In1, In2);
     }
-    else if (pos < target - 50){
-      setMotor(dirUp, 30, PWM, In1, In2);
+    else if (pos < zeroTarget - 25){
+      setMotor(dirUp, 40, PWM, In1, In2);
     }
     else{
       setMotor(0, 0, PWM, In1, In2);
     }
     break;
-  case goToTop:
-    if (pos > zeroTarget + 50){
-    setMotor(dirDown, 30, PWM, In1, In2);
+  case goToBottom:
+    if (pos > target + 50){
+      setMotor(dirDown, 70, PWM, In1, In2);
     }
-    else if (pos < zeroTarget - 50){
-      setMotor(dirUp, 30, PWM, In1, In2);
+    else if (pos < target - 50){
+      setMotor(dirUp, 70, PWM, In1, In2);
     }
     else{
       setMotor(0, 0, PWM, In1, In2);
@@ -64,9 +71,9 @@ void loop() {
   //default:
     // statements
   //  break;
-}
+  }
 
-  
+  lastButtonState = buttonState;
 
   //if (!button_state) setMotor(1, 30, PWM, In1, In2);    // Lift the egg
   //else setMotor(-1, 25, PWM, In1, In2);                 // Drop the egg
