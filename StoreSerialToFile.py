@@ -30,3 +30,26 @@ with open('serial_data.csv', 'w', newline='') as f:
     finally:
         # Close the serial port
         ser.close()
+
+
+
+# Arduino Code
+'''
+void setup() {
+    Serial.begin(9600);
+}
+
+void loop() {
+    unsigned long timestamp = millis();
+    float voltage = analogRead(A0) * (5.0 / 1023.0);
+    int position = analogRead(A1);
+    
+    Serial.print(timestamp);
+    Serial.print(", ");
+    Serial.print(voltage);
+    Serial.print(", ");
+    Serial.println(position);
+    
+    delay(1000);
+}
+'''
