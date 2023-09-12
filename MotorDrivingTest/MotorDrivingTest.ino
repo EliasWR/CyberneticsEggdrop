@@ -5,19 +5,29 @@
 #define In1 23
 #define In2 22
 
+#define BTN_PIN 7
+
 int pos = 0; 
 
 void setup() {
   Serial.begin(9600);
   pinMode(ENCA, INPUT);
   pinMode(ENCB, INPUT);
+  pinMode(BTN_PIN, INPUT_PULLUP);
   pinMode(In1, OUTPUT);
   pinMode(In2, OUTPUT);
   //attachInterrupt(digitalPinToInterrupt(ENCA), readEncoder, RISING);
 }
 
 void loop() {
+  
+  bool button_state = digitalRead(BTN_PIN);             // Active low
 
+  if (!button_state) setMotor(1, 30, PWM, In1, In2);    // Lift the egg
+  else setMotor(-1, 25, PWM, In1, In2);                 // Drop the egg
+  
+
+  /*
   for (int i = 0; i < 255; i++){
   digitalWrite(In1, 1);
   digitalWrite(In2, 0);
@@ -30,12 +40,10 @@ void loop() {
   analogWrite(PWM, i);
   delay(10);
   }
-  
-  //setMotor(1, 1, PWM, In1, In2);
+  */
 
-  /*
 
-  
+  /*  
   delay(1000);
   readLO();
   setMotor(-1, 25, PWM, In1, In2);
