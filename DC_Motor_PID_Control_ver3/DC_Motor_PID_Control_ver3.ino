@@ -12,11 +12,11 @@
 
 //**************************************
 
-#define ENCA 2      //Encoder pinA
-#define ENCB 3      //Encoder pinB
-#define PWM 11       //motor PWM pin
-#define IN2 6       //motor controller pin2
-#define IN1 7       //motor controller pin1
+#define ENCA 2        //Encoder pinA
+#define ENCB 3        //Encoder pinB
+#define PWM 10        //motor PWM pin
+#define IN2 23        //motor controller pin2
+#define IN1 22        //motor controller pin1
 
 volatile int posi = 0; // position variable. https://www.arduino.cc/reference/en/language/variables/variable-scope-qualifiers/volatile/ 
 long prevT = 0;
