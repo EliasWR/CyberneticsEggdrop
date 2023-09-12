@@ -7,6 +7,8 @@
 
 #define BTN_PIN 7
 
+int target = -12144;
+
 int pos = 0; 
 
 void setup() {
@@ -16,16 +18,29 @@ void setup() {
   pinMode(BTN_PIN, INPUT_PULLUP);
   pinMode(In1, OUTPUT);
   pinMode(In2, OUTPUT);
-  //attachInterrupt(digitalPinToInterrupt(ENCA), readEncoder, RISING);
+  attachInterrupt(digitalPinToInterrupt(ENCA), readEncoder, RISING);
 }
 
 void loop() {
   
   bool button_state = digitalRead(BTN_PIN);             // Active low
+  if (!button_state){
+      pos = 0;
+      delay(2000);
+  } 
 
-  if (!button_state) setMotor(1, 30, PWM, In1, In2);    // Lift the egg
-  else setMotor(-1, 25, PWM, In1, In2);                 // Drop the egg
+
+  if (pos > target){
+    setMotor(-1, 30, PWM, In1, In2);
+  }
+  else{
+    setMotor(0, 0, PWM, In1, In2);
+  }
+
+  //if (!button_state) setMotor(1, 30, PWM, In1, In2);    // Lift the egg
+  //else setMotor(-1, 25, PWM, In1, In2);                 // Drop the egg
   
+  Serial.println(pos);
 
   /*
   for (int i = 0; i < 255; i++){
@@ -85,3 +100,7 @@ void setMotor(int dir, int pwmVal, int pwm, int in1, int in2){
     digitalWrite(in2, LOW);
   }
 }
+
+// Write a function that detects the button press
+
+
