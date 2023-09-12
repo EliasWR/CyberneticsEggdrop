@@ -7,8 +7,18 @@
 
 #define BTN_PIN 7
 
+// Encoder to mm function
+
+
+// Timestamp; Target; MotorPWM; Encoder;
+
+unsigned long nextTimeout = 0;
+unsigned long stateTimer;
+
+int motorSpeed = 0;
+unsigned long timestamp = 0;
 int zeroTarget = 0;
-int target = 12000; // 12100; // -12144
+int target = 11000; // 12100; // -12144
 
 bool buttonState = LOW;
 bool lastButtonState = LOW;
@@ -47,21 +57,22 @@ void loop() {
   
   switch (setPosition) {
   case goToTop:
-    if (pos > zeroTarget + 25){
-    setMotor(dirDown, 40, PWM, In1, In2);
+    
+    if (pos > zeroTarget + 200){
+    setMotor(dirDown, 30, PWM, In1, In2);
     }
-    else if (pos < zeroTarget - 25){
-      setMotor(dirUp, 40, PWM, In1, In2);
+    else if (pos < zeroTarget - 200){
+      setMotor(dirUp, 30, PWM, In1, In2);
     }
     else{
       setMotor(0, 0, PWM, In1, In2);
     }
     break;
   case goToBottom:
-    if (pos > target + 50){
+    if (pos > target + 350){
       setMotor(dirDown, 70, PWM, In1, In2);
     }
-    else if (pos < target - 50){
+    else if (pos < target - 350){
       setMotor(dirUp, 70, PWM, In1, In2);
     }
     else{
@@ -75,10 +86,20 @@ void loop() {
 
   lastButtonState = buttonState;
 
+  if (timerHasExpired()){
+    startTimer(100);
+    Serial.print(millis());
+    Serial.print(", ");
+    Serial.print(target);
+    Serial.print(", ");
+    Serial.print(motorSpeed);
+    Serial.print(", ");
+    Serial.println(pos);
+  }
+
   //if (!button_state) setMotor(1, 30, PWM, In1, In2);    // Lift the egg
   //else setMotor(-1, 25, PWM, In1, In2);                 // Drop the egg
   
-  Serial.println(pos);
 
   /*
   for (int i = 0; i < 255; i++){
@@ -108,6 +129,15 @@ void loop() {
   */
 }
 
+void startTimer(int duration) {
+      nextTimeout = millis() + duration;
+    }
+
+bool timerHasExpired() {
+  bool timerExpired = (millis() >= nextTimeout);
+  return timerExpired;
+}
+
 void readEncoder(){
   int b = digitalRead(ENCB);
   if (b>0){
@@ -124,6 +154,7 @@ void readLO(){
 }
 
 void setMotor(int dir, int pwmVal, int pwm, int in1, int in2){
+  motorSpeed = pwmVal;
   analogWrite(pwm, pwmVal);
   if (dir == dirUp){
     digitalWrite(in1, HIGH);
