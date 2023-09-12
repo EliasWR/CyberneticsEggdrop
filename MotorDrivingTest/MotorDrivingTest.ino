@@ -69,10 +69,10 @@ void loop() {
     }
     break;
   case goToBottom:
-    if (pos > target + 350){
+    if (pos > target + 150){
       setMotor(dirDown, 70, PWM, In1, In2);
     }
-    else if (pos < target - 350){
+    else if (pos < target - 150){
       setMotor(dirUp, 70, PWM, In1, In2);
     }
     else{

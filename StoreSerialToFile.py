@@ -10,7 +10,7 @@ with open('serial_data.csv', 'w', newline='') as f:
     writer = csv.writer(f)
     
     # Write the header row
-    writer.writerow(['Timestamp', 'VTarget', 'MotorPWM', 'Encoder']) # Timestamp; Target; MotorPWM; Encoder;
+    writer.writerow(['Timestamp', 'Target', 'MotorPWM', 'Encoder']) # Timestamp; Target; MotorPWM; Encoder;
     
     try:
         while True:
@@ -21,7 +21,7 @@ with open('serial_data.csv', 'w', newline='') as f:
             line_str = line.decode('utf-8').strip()
             
             # Split the line at commas to create a list of values
-            values = line_str.split('; ')
+            values = line_str.split(', ')
             
             # Write the values to the CSV file
             writer.writerow(values)
