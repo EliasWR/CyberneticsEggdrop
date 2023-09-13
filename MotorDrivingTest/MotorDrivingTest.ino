@@ -7,11 +7,27 @@
 
 #define BTN_PIN 7
 
-int zeroTarget = 0;
-int target = 14000; // -12144
+// 5 forksjellige targets
+// Target pos
 
-bool buttonState = 0;
-bool lastButtonState = 0;
+int targetNum = 0;
+int targetList[] = {5000, 7000, 9000, 10000, 11000};
+
+unsigned long nextTimeout = 0;
+unsigned long stateTimer;
+
+int motorSpeed = 0;
+unsigned long timestamp = 0;
+int targetPos = 0;
+const int zeroTarget = 0;
+int target = 11000; // 12100; // -12144
+
+bool buttonState = LOW;
+bool lastButtonState = LOW;
+
+int setPosition = 0;
+const int goToTop = 0;
+const int goToBottom = 1;
 
 int pos = 0; 
 
@@ -30,48 +46,62 @@ void setup() {
 
 void loop() {
   
-  bool button_state = digitalRead(BTN_PIN);             // Active low
-  if (!button_state){
-      pos = 0;
-      delay(2000);
-  } 
+  buttonState = digitalRead(BTN_PIN);             // Active low
   
+  if (buttonState == HIGH && lastButtonState == LOW) {
+    setPosition += 1;
+    setPosition %= 2;
+    targetNum += 1;
+    targetNum %= 5;
+    target = targetList[targetNum];
+  }
   
-
   switch (setPosition) {
-  case goToBottom:
-    if (pos > target + 50){
-    setMotor(dirDown, 30, PWM, In1, In2);
-    }
-    else if (pos < target - 50){
-      setMotor(dirUp, 30, PWM, In1, In2);
-    }
-    else{
-      setMotor(0, 0, PWM, In1, In2);
-    }
-    break;
   case goToTop:
-    if (pos > zeroTarget + 50){
+    if (pos > zeroTarget + 200){
     setMotor(dirDown, 30, PWM, In1, In2);
     }
-    else if (pos < zeroTarget - 50){
+    else if (pos < zeroTarget - 200){
       setMotor(dirUp, 30, PWM, In1, In2);
     }
     else{
       setMotor(0, 0, PWM, In1, In2);
     }
+    targetPos = zeroTarget;
+    break;
+  case goToBottom:
+    if (pos > target + 150){
+      setMotor(dirDown, 60, PWM, In1, In2);
+    }
+    else if (pos < target - 150){
+      setMotor(dirUp, 60, PWM, In1, In2);
+    }
+    else{
+      setMotor(0, 0, PWM, In1, In2);
+    }
+    targetPos = target;
     break;
   //default:
     // statements
   //  break;
-}
+  }
 
-  
+  lastButtonState = buttonState;
+
+  if (timerHasExpired()){
+    startTimer(100);
+    Serial.print(millis());
+    Serial.print(", ");
+    Serial.print(targetPos);
+    Serial.print(", ");
+    Serial.print(motorSpeed);
+    Serial.print(", ");
+    Serial.println(pos);
+  }
 
   //if (!button_state) setMotor(1, 30, PWM, In1, In2);    // Lift the egg
   //else setMotor(-1, 25, PWM, In1, In2);                 // Drop the egg
   
-  Serial.println(pos);
 
   /*
   for (int i = 0; i < 255; i++){
@@ -101,6 +131,15 @@ void loop() {
   */
 }
 
+void startTimer(int duration) {
+      nextTimeout = millis() + duration;
+    }
+
+bool timerHasExpired() {
+  bool timerExpired = (millis() >= nextTimeout);
+  return timerExpired;
+}
+
 void readEncoder(){
   int b = digitalRead(ENCB);
   if (b>0){
@@ -111,12 +150,8 @@ void readEncoder(){
   }
 }
 
-void readLO(){
-  Serial.print(digitalRead(39));
-  Serial.println(digitalRead(37));
-}
-
 void setMotor(int dir, int pwmVal, int pwm, int in1, int in2){
+  motorSpeed = pwmVal;
   analogWrite(pwm, pwmVal);
   if (dir == dirUp){
     digitalWrite(in1, HIGH);

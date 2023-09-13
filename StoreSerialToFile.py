@@ -1,15 +1,16 @@
 import serial
 import csv
 
+serialPort = '/dev/cu.usbmodem1101' # "COM3"
 # Open the serial port (the COM port may vary, check the Arduino IDE for the correct port)
-ser = serial.Serial('COM3', 9600)
+ser = serial.Serial(serialPort, 9600)
 
 # Open or create a CSV file in write mode
 with open('serial_data.csv', 'w', newline='') as f:
     writer = csv.writer(f)
     
     # Write the header row
-    writer.writerow(['Timestamp', 'Voltage', 'Position'])
+    writer.writerow(['Timestamp', 'Target', 'MotorPWM', 'Encoder']) # Timestamp; Target; MotorPWM; Encoder;
     
     try:
         while True:
