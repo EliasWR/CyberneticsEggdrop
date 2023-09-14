@@ -21,10 +21,10 @@ enc_Zero = 0;
 enc_Limit = 12144;
 cm_Zero = 0;
 cm_Limit = 20;
-Target_scaled = simpleScale(Target_raw, enc_Zero, enc_Limit, cm_Zero, cm_Limit)
+Target_scaled = simpleScale(Target_raw, enc_Zero, enc_Limit, cm_Zero, cm_Limit);
 Actual_scaled = (Actual_raw - enc_Zero) / (enc_Limit - enc_Zero) * (cm_Limit-cm_Zero) + cm_Zero; 
 
-Input_voltage = PWM_raw * 5/255; % PWM converted to voltage [V]
+Input_voltage = PWM_raw; % PWM converted to voltage [V]
 
 %% Sampling time from timestamps
 
@@ -74,3 +74,21 @@ plot(timestamp, Actual_scaled)
 grid on
 xlabel('time [s]')
 ylabel('Encoder position')
+
+%% Identifacting the system
+Gp = tfest(DC_Motor_DATA, 2, 0) 
+
+%% Digital twin (Open loop)
+
+H = [1];   % Feedback (No controller)
+
+figure(2)
+M = feedback(Gp, H);    
+step(M)
+hold on
+legend('Uncontrolled system')
+
+%% Controller parameters
+
+Gc = pid();
+AutoTuner

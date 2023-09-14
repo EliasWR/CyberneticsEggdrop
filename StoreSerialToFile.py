@@ -1,7 +1,8 @@
 import serial
 import csv
 
-serialPort = '/dev/cu.usbmodem1101' # "COM3"
+# serialPort = '/dev/cu.usbmodem1101' # "COM3"
+serialPort = "COM6"
 # Open the serial port (the COM port may vary, check the Arduino IDE for the correct port)
 ser = serial.Serial(serialPort, 9600)
 
@@ -16,7 +17,7 @@ with open('serial_data.csv', 'w', newline='') as f:
         while True:
             # Read a line from the serial port
             line = ser.readline()
-            
+            print(line)
             # Decode the line to convert it from bytes to string
             line_str = line.decode('utf-8').strip()
             

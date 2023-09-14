@@ -1,3 +1,9 @@
+const int LOG = 1;
+const int DEBUG = 2;
+const int OFF = 0;
+int LOGGING = LOG;
+
+/*==== Pinout ====*/
 #define ENCA 2 
 #define ENCB 3
 
@@ -6,35 +12,52 @@
 #define In2 22
 
 #define BTN_PIN 7
+/*=================*/
 
-// 5 forksjellige targets
-// Target pos
 
+/*==== Target ====*/ 
+const int nTARGETS = 5;
 int targetNum = 0;
 int targetList[] = {5000, 7000, 9000, 10000, 11000};
+int target = 11000; // 12100; // -12144
+/*================*/
 
+// ==== Timer ====
 unsigned long nextTimeout = 0;
-unsigned long stateTimer;
+unsigned long BFnextTimeout = 0;
+unsigned long stateTimer = 0;
+// ================
+
+
 
 int motorSpeed = 0;
 unsigned long timestamp = 0;
-int targetPos = 0;
+int target_log = 0;
 const int zeroTarget = 0;
-int target = 11000; // 12100; // -12144
+const int zeroThreshold = 150;
+const int targetThreshold = 150;
 
-bool buttonState = LOW;
-bool lastButtonState = LOW;
+// ==== Button ====
+// Active low
+bool buttonState = HIGH;
+bool lastButtonState = HIGH;
 
+
+/* ==== Position Control ==== */
 int setPosition = 0;
 const int goToTop = 0;
 const int goToBottom = 1;
-
-int pos = 0; 
-
-int dirDown = -1;
-int dirUp = 1;
+int current_pos = 0; 
+const int DOWN = -1;
+const int UP = 1;
+const int sSTOP = 0;
+const int sTO_ZERO = 1;
+const int sTO_TARGET = 2;
+int current_state = sSTOP;
+/* ========================== */
 
 void setup() {
+  digitalWrite(13, LOW);
   Serial.begin(9600);
   pinMode(ENCA, INPUT);
   pinMode(ENCB, INPUT);
@@ -42,62 +65,130 @@ void setup() {
   pinMode(In1, OUTPUT);
   pinMode(In2, OUTPUT);
   attachInterrupt(digitalPinToInterrupt(ENCA), readEncoder, RISING);
+
+  setMotor(0, 0, PWM, In1, In2);
+  /*___ Set Zero at startup___*/
+  // Position the egg at desired ZERO. Then press button to move on
+  if(LOGGING == DEBUG) Serial.println("Press button to set zero");
+  buttonState = digitalRead(BTN_PIN);
+  while (!(buttonState == HIGH && lastButtonState == LOW)){
+    lastButtonState = buttonState;
+    buttonState = digitalRead(BTN_PIN);
+  }
+  if (LOGGING == DEBUG) Serial.println("Zero set");
+  lastButtonState = buttonState;
+  current_pos = 0;
+  current_state = sSTOP;
+  delay(2000);
 }
 
 void loop() {
   
+  /*___ Handle button press ___*/
   buttonState = digitalRead(BTN_PIN);             // Active low
-  
-  if (buttonState == HIGH && lastButtonState == LOW) {
+
+  /*
+  if (buttonState == HIGH && lastButtonState == LOW && buttonFilterHasExpired()) {
+    startButtonFilter(100);
+    
     setPosition += 1;
     setPosition %= 2;
     targetNum += 1;
     targetNum %= 5;
     target = targetList[targetNum];
+    
   }
-  
+  /*
+
+
+  /*___ STATE MACHINE ___*/
+  switch(current_state){
+    case sSTOP:
+      if (LOGGING == DEBUG) Serial.println("STOP");
+      setMotor(0, 0, PWM, In1, In2);
+      if (buttonState == HIGH && lastButtonState == LOW && buttonFilterHasExpired()) {
+        // On button RELEASE
+        startButtonFilter(100);
+        current_state = sTO_ZERO;
+      }
+      break;
+
+    case sTO_ZERO:
+      if (LOGGING == DEBUG) Serial.println("TO ZERO");
+      target_log = zeroTarget;
+      if (goToZero() && buttonState == HIGH && lastButtonState == LOW && buttonFilterHasExpired()){
+        startButtonFilter(100);
+        current_state = sTO_TARGET;
+        target = targetList[targetNum++];
+        
+        targetNum %= nTARGETS;
+
+        if (targetNum == 0) {current_state = sSTOP;}
+        else {current_state = sTO_TARGET;}
+      }
+      break;
+
+    case sTO_TARGET:
+      if (LOGGING == DEBUG) Serial.println("TO TARGET");
+      target_log = target;
+      if (goToTarget(target, targetThreshold, 70) && buttonState == HIGH && lastButtonState == LOW && buttonFilterHasExpired()){
+        startButtonFilter(100);
+        
+        current_state = sTO_ZERO;
+      }
+      break;
+
+  }
+
+  /*___ Print to serial ___*/
+  if (LOGGING == LOG){
+    if (timerHasExpired()){
+      startTimer(15);
+      Serial.print(millis());
+      Serial.print(", ");
+      Serial.print(target_log);
+      Serial.print(", ");
+      Serial.print(motorSpeed);
+      Serial.print(", ");
+      Serial.println(current_pos);
+    }
+  }
+
+  /*___ STATE MACHINE ___*/
+  /*
   switch (setPosition) {
   case goToTop:
-    if (pos > zeroTarget + 200){
-    setMotor(dirDown, 30, PWM, In1, In2);
+    if (current_pos > zeroTarget + 200){
+    setMotor(DOWN, 30, PWM, In1, In2);
     }
-    else if (pos < zeroTarget - 200){
-      setMotor(dirUp, 30, PWM, In1, In2);
+    else if (current_pos < zeroTarget - 200){
+      setMotor(UP, 30, PWM, In1, In2);
     }
     else{
       setMotor(0, 0, PWM, In1, In2);
     }
-    targetPos = zeroTarget;
+    target_log = zeroTarget;
     break;
   case goToBottom:
-    if (pos > target + 150){
-      setMotor(dirDown, 60, PWM, In1, In2);
+    if (current_pos > target + 150){
+      setMotor(DOWN, 60, PWM, In1, In2);
     }
-    else if (pos < target - 150){
-      setMotor(dirUp, 60, PWM, In1, In2);
+    else if (current_pos < target - 150){
+      setMotor(UP, 60, PWM, In1, In2);
     }
     else{
       setMotor(0, 0, PWM, In1, In2);
     }
-    targetPos = target;
+    target_log = target;
     break;
   //default:
     // statements
   //  break;
   }
+  */
+ 
 
-  lastButtonState = buttonState;
-
-  if (timerHasExpired()){
-    startTimer(100);
-    Serial.print(millis());
-    Serial.print(", ");
-    Serial.print(targetPos);
-    Serial.print(", ");
-    Serial.print(motorSpeed);
-    Serial.print(", ");
-    Serial.println(pos);
-  }
+  
 
   //if (!button_state) setMotor(1, 30, PWM, In1, In2);    // Lift the egg
   //else setMotor(-1, 25, PWM, In1, In2);                 // Drop the egg
@@ -129,35 +220,77 @@ void loop() {
   delay(1000);
   readLO();
   */
+
+  lastButtonState = buttonState;
 }
+
 
 void startTimer(int duration) {
       nextTimeout = millis() + duration;
     }
+
 
 bool timerHasExpired() {
   bool timerExpired = (millis() >= nextTimeout);
   return timerExpired;
 }
 
+
+void startButtonFilter(int duration) {
+      BFnextTimeout = millis() + duration;
+    }
+
+
+bool buttonFilterHasExpired() {
+  bool timerExpired = (millis() >= BFnextTimeout);
+  return timerExpired;
+}
+
+
 void readEncoder(){
   int b = digitalRead(ENCB);
   if (b>0){
-    pos++;
+    current_pos++;
   }
   else{
-    pos--;
+    current_pos--;
   }
+}
+
+
+bool goToTarget(int target, int threshold, int speed){
+  if (current_pos > (target + threshold)){
+    setMotor(DOWN, speed, PWM, In1, In2);
+    }
+  else if (current_pos < (target - threshold)){
+    setMotor(UP, speed, PWM, In1, In2);
+  }
+  else{
+    //setMotor(0, 0, PWM, In1, In2);
+    holdMotor();
+    return true;
+  }
+  return false;
+}
+
+
+bool goToZero(){
+  return goToTarget(zeroTarget, zeroThreshold, 30);
+}
+
+
+void holdMotor(){
+  setMotor(UP, 0, PWM, In1, In2);
 }
 
 void setMotor(int dir, int pwmVal, int pwm, int in1, int in2){
   motorSpeed = pwmVal;
   analogWrite(pwm, pwmVal);
-  if (dir == dirUp){
+  if (dir == UP){
     digitalWrite(in1, HIGH);
     digitalWrite(in2, LOW);
   }
-  else if (dir == dirDown){
+  else if (dir == DOWN){
     digitalWrite(in1, LOW);
     digitalWrite(in2, HIGH);
   }
@@ -166,7 +299,3 @@ void setMotor(int dir, int pwmVal, int pwm, int in1, int in2){
     digitalWrite(in2, LOW);
   }
 }
-
-// Write a function that detects the button press
-
-
