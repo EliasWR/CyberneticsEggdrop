@@ -90,5 +90,4 @@ legend('Uncontrolled system')
 
 %% Controller parameters
 
-Gc = pid();
-AutoTuner
+Gc = tunablePID('Controller','PID')
