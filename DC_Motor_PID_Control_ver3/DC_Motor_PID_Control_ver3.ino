@@ -47,12 +47,12 @@ void setup() {
 void loop() {
 
   // Set target position (1024 * X rounds) NB! Check encoder dipswitch for resolution (standard is 2048 for AMT 102V).
-  int targ = 1024*5;
+  int targ = -1024*5;
 
   //PID constants
   float kp = 1.0;
   float kd = 0.01;
-  float ki = 0.0;
+  float ki = 0.0; // 3.59*10^-8
 
   //time diference
   long currT = micros();

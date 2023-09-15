@@ -25,10 +25,10 @@
 
 volatile int32_t posi = 0; // position variable. https://www.arduino.cc/reference/en/language/variables/variable-scope-qualifiers/volatile/ 
 
-float Kp = 0.12; //Proportional gain
-float Ki = 0.06; //Integral gain
+float Kp = 0.12; //Proportional gain // 0.12 // 0.18
+float Ki = 0.06; //Integral gain // 0.06 // 0.01 // 0.12
 float Kd = 0.0; //Derivative gain
-
+float motorSpeedMax = 60;
 
 bool last_btn_state = HIGH; //Button state
 int32_t current_pos = 0; //Current position
@@ -42,7 +42,7 @@ int state = IDLE;
 
 
 /*****************   OBJECTS   ******************/
-PID pid(Kp, Ki, Kd, -40, 40);  //PID controller
+PID pid(Kp, Ki, Kd, -motorSpeedMax, motorSpeedMax);  //PID controller
 Motor motor(PWM, IN1, IN2);  //DC motor
 Timer StateTimer; //Timer
 /************************************************/
