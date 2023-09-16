@@ -5,7 +5,7 @@
 clear; clc; close all;
 
 %% Import dataset
-filename = "serial_data.csv";
+filename = "serial_data copy.csv";
 dataset = importdata(filename, ',').data;
 
 %% Manipulate data
@@ -113,4 +113,12 @@ legend('Uncontrolled system')
 
 %% Controller parameters
 
-Gc = tunablePID('Controller','PID')
+Gc = pidtune(tf1,'PI')
+
+Mc = feedback(Gc*Gp, H)
+
+step(Mc)
+grid on
+hold off
+legend('uncontrolled system' ,'controlled system')
+
