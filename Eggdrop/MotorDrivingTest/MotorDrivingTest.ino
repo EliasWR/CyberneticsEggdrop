@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 const int LOG = 1;
 const int DEBUG = 2;
 const int OFF = 0;
@@ -14,11 +16,17 @@ int LOGGING = LOG;
 #define BTN_PIN 7
 /*=================*/
 
+const int ENCODER_RESOLUTION = 512;
+const int SPEED = 50;
+const int SPEED_TO_ZERO = 30;
+
 
 /*==== Target ====*/ 
 const int nTARGETS = 5;
 int targetNum = 0;
-int targetList[] = {1250, 1750, 2250, 2500, 2750};
+
+int targetList[] = {1, 2, 3, 4, 5}; // Times encoder resolution
+
 int target = 11000; // 12100; // -12144
 /*================*/
 
@@ -27,7 +35,6 @@ unsigned long nextTimeout = 0;
 unsigned long BFnextTimeout = 0;
 unsigned long stateTimer = 0;
 // ================
-
 
 
 int motorSpeed = 0;
@@ -131,7 +138,9 @@ void loop() {
     case sTO_TARGET:
       if (LOGGING == DEBUG) Serial.println("TO TARGET");
       target_log = target;
-      if (goToTarget(target, targetThreshold, 200) && buttonState == HIGH && lastButtonState == LOW && buttonFilterHasExpired()){
+
+      if (goToTarget(target, targetThreshold, SPEED) && buttonState == HIGH && lastButtonState == LOW && buttonFilterHasExpired()){
+
         startButtonFilter(100);
         
         current_state = sTO_ZERO;
@@ -275,7 +284,7 @@ bool goToTarget(int target, int threshold, int speed){
 
 
 bool goToZero(){
-  return goToTarget(zeroTarget, zeroThreshold, 200);
+  return goToTarget(zeroTarget, zeroThreshold, SPEED_TO_ZERO);
 }
 
 
