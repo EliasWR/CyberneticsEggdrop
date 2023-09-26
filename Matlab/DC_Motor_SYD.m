@@ -5,7 +5,7 @@
 clear; clc; close all;
 
 %% Import dataset
-filename = "serial_data.csv";
+filename = "serial_data1.csv";
 dataset = importdata(filename, ',').data;
 
 %% Manipulate data
@@ -18,11 +18,11 @@ Actual_raw = dataset(:, 4); % Actual position (encoder value)
 
 % Skalere input fra encoder
 enc_Zero = 0;
-enc_Limit = 12144;
+enc_Limit = 12144/4;
 cm_Zero = 0;
 cm_Limit = 20;
 Target_scaled = simpleScale(Target_raw, enc_Zero, enc_Limit, cm_Zero, cm_Limit);
-Actual_scaled = (Actual_raw - enc_Zero) / (enc_Limit - enc_Zero) * (cm_Limit-cm_Zero) + cm_Zero; 
+Actual_scaled = simpleScale(Actual_raw, enc_Zero, enc_Limit, cm_Zero, cm_Limit);
 
 Input_voltage = PWM_raw; % PWM converted to voltage [V]
 
@@ -98,8 +98,7 @@ xlabel('time [s]')
 ylabel('Motor output')
 
 %% Identifacting the system
-Gp = tfest(DC_Motor_DATA, 2, 0)
-Gp1 = tfest(DC_Motor_DATA, 10, 0)
+Gp = tfest(DC_Motor_DATA, 2, 1)
 
 %% Digital twin (Open loop)
 
@@ -113,4 +112,12 @@ legend('Uncontrolled system')
 
 %% Controller parameters
 
-Gc = tunablePID('Controller','PID')
+Gc = pidtune(Gp,'PI')
+
+Mc = feedback(Gc*Gp, H)
+
+step(Mc)
+grid on
+hold off
+legend('uncontrolled system' ,'controlled system')
+

@@ -1,13 +1,15 @@
 import serial
 import csv
 
-serialPort = '/dev/cu.usbmodem11101' # "COM3"
-# serialPort = "COM6"
+
+# serialPort = '/dev/cu.usbmodem11101' # "COM3"
+serialPort = "COM6"
+
 # Open the serial port (the COM port may vary, check the Arduino IDE for the correct port)
 ser = serial.Serial(serialPort, 9600)
 
 # Open or create a CSV file in write mode
-with open('serial_data1.csv', 'w', newline='') as f:
+with open('serial_data2.csv', 'w', newline='') as f:
     writer = csv.writer(f)
     
     # Write the header row
