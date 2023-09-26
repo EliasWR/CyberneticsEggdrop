@@ -16,11 +16,15 @@ int LOGGING = LOG;
 #define BTN_PIN 7
 /*=================*/
 
+const int ENCODER_RESOLUTION = 512;
+const int SPEED = 50;
+const int SPEED_TO_ZERO = 30;
+
 
 /*==== Target ====*/ 
 const int nTARGETS = 5;
 int targetNum = 0;
-int targetList[] = {5000, 7000, 9000, 10000, 11000};
+int targetList[] = {1, 2, 3, 4, 5}; // Times encoder resolution
 int target = 11000; // 12100; // -12144
 /*================*/
 
@@ -31,9 +35,6 @@ unsigned long stateTimer = 0;
 // ================
 
 
-const int ENCODER_RESOLUTION = 2048;
-const int SPEED = 50;
-const int SPEED_TO_ZERO = 30;
 int motorSpeed = 0;
 unsigned long timestamp = 0;
 int target_log = 0;
