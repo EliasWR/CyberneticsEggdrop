@@ -18,7 +18,7 @@ int LOGGING = LOG;
 /*==== Target ====*/ 
 const int nTARGETS = 5;
 int targetNum = 0;
-int targetList[] = {5000, 7000, 9000, 10000, 11000};
+int targetList[] = {1250, 1750, 2250, 2500, 2750};
 int target = 11000; // 12100; // -12144
 /*================*/
 
@@ -131,7 +131,7 @@ void loop() {
     case sTO_TARGET:
       if (LOGGING == DEBUG) Serial.println("TO TARGET");
       target_log = target;
-      if (goToTarget(target, targetThreshold, 70) && buttonState == HIGH && lastButtonState == LOW && buttonFilterHasExpired()){
+      if (goToTarget(target, targetThreshold, 200) && buttonState == HIGH && lastButtonState == LOW && buttonFilterHasExpired()){
         startButtonFilter(100);
         
         current_state = sTO_ZERO;
@@ -275,7 +275,7 @@ bool goToTarget(int target, int threshold, int speed){
 
 
 bool goToZero(){
-  return goToTarget(zeroTarget, zeroThreshold, 30);
+  return goToTarget(zeroTarget, zeroThreshold, 200);
 }
 
 
@@ -284,7 +284,7 @@ void holdMotor(){
 }
 
 void setMotor(int dir, int pwmVal, int pwm, int in1, int in2){
-  motorSpeed = pwmVal;
+  motorSpeed = pwmVal * dir;
   analogWrite(pwm, pwmVal);
   if (dir == UP){
     digitalWrite(in1, HIGH);
