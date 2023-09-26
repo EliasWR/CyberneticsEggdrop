@@ -1,8 +1,10 @@
 import serial
 import csv
 
-# serialPort = '/dev/cu.usbmodem1101' # "COM3"
-serialPort = "COM3"
+
+# serialPort = '/dev/cu.usbmodem11101' # "COM3"
+serialPort = "COM6"
+
 # Open the serial port (the COM port may vary, check the Arduino IDE for the correct port)
 ser = serial.Serial(serialPort, 9600)
 
