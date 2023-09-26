@@ -24,7 +24,9 @@ const int SPEED_TO_ZERO = 30;
 /*==== Target ====*/ 
 const int nTARGETS = 5;
 int targetNum = 0;
+
 int targetList[] = {1, 2, 3, 4, 5}; // Times encoder resolution
+
 int target = 11000; // 12100; // -12144
 /*================*/
 
@@ -136,7 +138,9 @@ void loop() {
     case sTO_TARGET:
       if (LOGGING == DEBUG) Serial.println("TO TARGET");
       target_log = target;
+
       if (goToTarget(target, targetThreshold, SPEED) && buttonState == HIGH && lastButtonState == LOW && buttonFilterHasExpired()){
+
         startButtonFilter(100);
         
         current_state = sTO_ZERO;
@@ -289,7 +293,7 @@ void holdMotor(){
 }
 
 void setMotor(int dir, int pwmVal, int pwm, int in1, int in2){
-  motorSpeed = pwmVal;
+  motorSpeed = pwmVal * dir;
   analogWrite(pwm, pwmVal);
   if (dir == UP){
     digitalWrite(in1, HIGH);
