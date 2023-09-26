@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 const int LOG = 1;
 const int DEBUG = 2;
 const int OFF = 0;
@@ -29,7 +31,9 @@ unsigned long stateTimer = 0;
 // ================
 
 
-
+const int ENCODER_RESOLUTION = 2048;
+const int SPEED = 50;
+const int SPEED_TO_ZERO = 30;
 int motorSpeed = 0;
 unsigned long timestamp = 0;
 int target_log = 0;
@@ -131,7 +135,7 @@ void loop() {
     case sTO_TARGET:
       if (LOGGING == DEBUG) Serial.println("TO TARGET");
       target_log = target;
-      if (goToTarget(target, targetThreshold, 70) && buttonState == HIGH && lastButtonState == LOW && buttonFilterHasExpired()){
+      if (goToTarget(target, targetThreshold, SPEED) && buttonState == HIGH && lastButtonState == LOW && buttonFilterHasExpired()){
         startButtonFilter(100);
         
         current_state = sTO_ZERO;
@@ -275,7 +279,7 @@ bool goToTarget(int target, int threshold, int speed){
 
 
 bool goToZero(){
-  return goToTarget(zeroTarget, zeroThreshold, 30);
+  return goToTarget(zeroTarget, zeroThreshold, SPEED_TO_ZERO);
 }
 
 
