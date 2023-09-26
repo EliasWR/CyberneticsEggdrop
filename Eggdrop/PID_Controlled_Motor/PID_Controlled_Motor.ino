@@ -25,10 +25,13 @@
 
 volatile int32_t posi = 0; // position variable. https://www.arduino.cc/reference/en/language/variables/variable-scope-qualifiers/volatile/ 
 
-float Kp = 0.12; //Proportional gain // 0.12 // 0.18
+// System identification
+// Kp = 0.0991;
+// Ki = 0.0126;
+float Kp = 0.12; //Proportional gain // 0.12 // 0.18 
 float Ki = 0.06; //Integral gain // 0.06 // 0.01 // 0.12
 float Kd = 0.0; //Derivative gain
-float motorSpeedMax = 60;
+float motorSpeedMax = 255;
 
 bool last_btn_state = HIGH; //Button state
 int32_t current_pos = 0; //Current position
@@ -55,7 +58,7 @@ float u = 0;
 
 void setup() {
   
-  Serial.begin (9600);
+  Serial.begin (115200);
 
   // ENCODER
   pinMode (ENCA, INPUT);
@@ -119,12 +122,21 @@ void loop(){
   case RUN_TO_START:
     u = pid.update(current_pos, start_pos);
     motor.run(u);
+    /*
     Serial.print("Target pos: ");
     Serial.print(target);
     Serial.print(", Encoder pos: ");
     Serial.print(current_pos);
     Serial.print(", PID out: ");
     Serial.println(u);
+    */
+    Serial.print(millis());
+    Serial.print(", ");
+    Serial.print(target);
+    Serial.print(", ");
+    Serial.print(u);
+    Serial.print(", ");
+    Serial.println(current_pos);
     if((current_pos <= start_pos + target_threshold && current_pos >= start_pos - target_threshold) or (btn_state && !last_btn_state)){
       motor.stop();
       setState(READY_FOR_DROP);
@@ -134,12 +146,21 @@ void loop(){
   case RUN:
     u = pid.update(current_pos, target);
     motor.run(u);
+    /*
     Serial.print("Target pos: ");
     Serial.print(target);
     Serial.print(", Encoder pos: ");
     Serial.print(current_pos);
     Serial.print(", PID out: ");
     Serial.println(u);
+    */
+    Serial.print(millis());
+    Serial.print(", ");
+    Serial.print(target);
+    Serial.print(", ");
+    Serial.print(u);
+    Serial.print(", ");
+    Serial.println(current_pos);
     if(btn_state && !last_btn_state){
       setState(RUN_TO_START);
     }
@@ -229,6 +250,7 @@ void readEncoder(){
 void setState(int new_state){
   last_state = state;
   state = new_state;
+  /*
   Serial.print("State changed from ");
   Serial.print(stateStr(last_state));
   Serial.print(" to ");
@@ -238,12 +260,14 @@ void setState(int new_state){
   Serial.print("Current position: ");
   Serial.println(current_pos);
   Serial.println("");
+  */
   StateTimer.reset();
 }
 
 void setState(int new_state, int delay){
   last_state = state;
   state = new_state;
+  /*
   Serial.print("State changed from ");
   Serial.print(stateStr(last_state));
   Serial.print(" to ");
@@ -253,6 +277,7 @@ void setState(int new_state, int delay){
   Serial.print("Current position: ");
   Serial.println(current_pos);
   Serial.println("");
+  */
   StateTimer.reset(delay);
 }
 
