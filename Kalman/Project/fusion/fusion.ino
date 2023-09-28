@@ -3,8 +3,8 @@
 // Subnet: 255.255.255.0
 
 #include <HardWire.h>
-#include <VL53L0X.h>
 #include <I2C_MPU6886.h>
+#include <VL53L0X.h>
 
 #include <Ethernet.h>
 #include <EthernetUdp.h>

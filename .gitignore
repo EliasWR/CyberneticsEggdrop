@@ -1,4 +1,11 @@
 .vscode/*
+.vscode
+.build/*
+.build
+
+tempCodeRunneFile.py
+
+.DS_Store
 
 # Matlab files
 *.asv
