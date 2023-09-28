@@ -3,7 +3,7 @@
 .build/*
 .build
 
-tempCodeRunneFile.py
+temp*
 
 .DS_Store
 
