@@ -1,2 +1,15 @@
-class Kalman:
-    slett = 0
+import numpy as np
+
+class KalmanFilter:
+
+    def __init__():
+        pass
+
+    def predict():
+        pass
+
+    def update():
+        pass
+
+
+    
