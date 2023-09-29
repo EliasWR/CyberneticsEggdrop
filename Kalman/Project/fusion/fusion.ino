@@ -87,7 +87,7 @@ void loop()
 
     udp_server.read(packet_buffer, UDP_TX_PACKET_MAX_SIZE);
     float motor_power = String(packet_buffer).toFloat();
-    Serial.print("MPP: ");Serial.println(motor_power);
+    //Serial.print("MPP: ");Serial.println(motor_power);
 
     udp_server.beginPacket(udp_server.remoteIP(), udp_server.remotePort());
     udp_server.write(sensor_values.c_str(), sensor_values.length());

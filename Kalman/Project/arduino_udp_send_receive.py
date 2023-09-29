@@ -15,15 +15,15 @@ def arduino_send_receive(estimate):
     udp_socket.sendto(str(estimate).encode(), (arduino_ip, arduino_port))
     try:
         inbound_message, remote_address = udp_socket.recvfrom(24)
-        # returns an array with the following values
-        # [accel_x, accel_y, accel_z, range_sensor]
+        # returns an a values
+        # [accel_x, accel_y, accel_z, range_senrray with the followingsor]
         return np.array(inbound_message.decode('ascii').split(',')).astype(float)
     except Exception as e:
         print(e)
 
 
 def use_sensor_values_for_something(sensor_values):
-    print(sensor_values)
+    print("Coms OK")
 
 
 def arduino_has_been_reset():
