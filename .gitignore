@@ -1,4 +1,11 @@
 .vscode/*
+.vscode
+.build/*
+.build
+
+temp*
+
+.DS_Store
 
 # Matlab files
 *.asv
