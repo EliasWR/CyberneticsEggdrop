@@ -67,17 +67,17 @@ bool initialize()
 void loop() 
 { 
   int packet_size = udp_server.parsePacket();
-  if(packet_size) 
+  if(packet_size)
   {
     float accel[3];
     float gyro[3];
     float t;
     float d;
   
-    imu.getAccel(&accel[0], &accel[1], &accel[2]);
-    imu.getGyro(&gyro[0], &gyro[1], &gyro[2]);
-    imu.getTemp(&t);
-    d = range_sensor.readRangeContinuousMillimeters();
+    imu.getAccel(&accel[0], &accel[1], &accel[2]);      // Acceleration in X,Y,Z axis
+    imu.getGyro(&gyro[0], &gyro[1], &gyro[2]);          // Gyro in X,Y,Z axis
+    imu.getTemp(&t);                                    // Temperature
+    d = range_sensor.readRangeContinuousMillimeters();  // Distance sensor
 
     String sensor_values;
     sensor_values.concat(accel[0]); sensor_values.concat(",");
@@ -88,20 +88,27 @@ void loop()
     udp_server.read(packet_buffer, UDP_TX_PACKET_MAX_SIZE);
     float motor_power = String(packet_buffer).toFloat();
     //Serial.print("MPP: ");Serial.println(motor_power);
-
-    udp_server.beginPacket(udp_server.remoteIP(), udp_server.remotePort());
-    udp_server.write(sensor_values.c_str(), sensor_values.length());
-    udp_server.endPacket();
-  }
-/**
+    
     printVector3('A', accel);
     printVector3('G', gyro);
     printScalar('T', t);
     printScalar('D', d);
     printPackageMetaInfo(packet_size);
-**/
+    
+    udp_server.beginPacket(udp_server.remoteIP(), udp_server.remotePort());
+    udp_server.write(sensor_values.c_str(), sensor_values.length());
+    udp_server.endPacket();
+  }
 }
-
+/*
+void printSensorInfo (float[3] &accel) {
+  Serial.print(accel[0]);
+  Serial.print(", ");
+  Serial.print(accel[1]);
+  Serial.print(", ");
+  Serial.print(accel[2]);
+}
+*/
 void printVector3(char label, float *vector)
 {
   Serial.print(label); Serial.print(" = ");
