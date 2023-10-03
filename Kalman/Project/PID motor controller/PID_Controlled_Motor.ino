@@ -84,7 +84,7 @@ void loop(){
   bool btn_state = digitalRead(BTN_PIN);
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
     current_pos = posi;
-  }
+  } 
 
   switch (state)
   {

@@ -9,28 +9,6 @@
 #include <Ethernet.h>
 #include <EthernetUdp.h>
 
-#include <util/atomic.h>
-#include "pid.h"
-#include "motor.h"
-#include "timer.h"
-
-#define ENCA 2        //Encoder pinA
-#define ENCB 3        //Encoder pinB
-#define PWM 10        //motor PWM pin
-#define IN2 23        //motor controller pin2
-#define IN1 22        //motor controller pin1
-#define BTN_PIN 7     //button pin
-
-volatile int32_t posi = 0;
-
-float Kp = 0.12; //Proportional gain // 0.12 // 0.18 
-float Ki = 0.06; //Integral gain // 0.06 // 0.01 // 0.12
-float Kd = 0.0; //Derivative gain
-float motorSpeedMax = 255;
-
-bool last_btn_state = HIGH; //Button state
-int32_t current_pos = 0; //Current position
-
 VL53L0X range_sensor;
 I2C_MPU6886 imu(I2C_MPU6886_DEFAULT_ADDRESS, Wire);
 
