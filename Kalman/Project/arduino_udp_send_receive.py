@@ -22,8 +22,6 @@ def arduino_send_receive(estimate):
     udp_socket.sendto(str(estimate).encode(), (arduino_ip, arduino_port))
     try:
         inbound_message, remote_address = udp_socket.recvfrom(24)
-        # returns an a values
-        # [accel_x, accel_y, accel_z, range_senrray with the followingsor]
         return np.array(inbound_message.decode('ascii').split(',')).astype(float)
     except Exception as e:
         print(e)
@@ -56,12 +54,13 @@ def writeSensorDataToFile ():
         estimate = 0.0
         delta = 1.0
         while (True):
+            # Kalman filter data
             estimate = estimate + delta
             if (estimate > 100.0):
                 delta = -1
             elif (estimate < -100):
                 delta = 1
-
+            # Kalman filter data
             sensor_values = arduino_send_receive(estimate)
 
             if (sensor_values is not None):
@@ -91,5 +90,5 @@ def printSensorData ():
         sensor_values = np.append(sensor_values, currentTime)
         print(sensor_values)
 
-# printSensorData()
-writeSensorDataToFile()
+printSensorData()
+# writeSensorDataToFile()

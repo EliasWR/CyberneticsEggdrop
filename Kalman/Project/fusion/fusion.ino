@@ -9,6 +9,28 @@
 #include <Ethernet.h>
 #include <EthernetUdp.h>
 
+#include <util/atomic.h>
+#include "pid.h"
+#include "motor.h"
+#include "timer.h"
+
+#define ENCA 2        //Encoder pinA
+#define ENCB 3        //Encoder pinB
+#define PWM 10        //motor PWM pin
+#define IN2 23        //motor controller pin2
+#define IN1 22        //motor controller pin1
+#define BTN_PIN 7     //button pin
+
+volatile int32_t posi = 0;
+
+float Kp = 0.12; //Proportional gain // 0.12 // 0.18 
+float Ki = 0.06; //Integral gain // 0.06 // 0.01 // 0.12
+float Kd = 0.0; //Derivative gain
+float motorSpeedMax = 255;
+
+bool last_btn_state = HIGH; //Button state
+int32_t current_pos = 0; //Current position
+
 VL53L0X range_sensor;
 I2C_MPU6886 imu(I2C_MPU6886_DEFAULT_ADDRESS, Wire);
 
@@ -87,18 +109,22 @@ void loop()
 
     udp_server.read(packet_buffer, UDP_TX_PACKET_MAX_SIZE);
     float motor_power = String(packet_buffer).toFloat();
-    //Serial.print("MPP: ");Serial.println(motor_power);
     
     printVector3('A', accel);
     printVector3('G', gyro);
     printScalar('T', t);
     printScalar('D', d);
-    printPackageMetaInfo(packet_size);
+    Serial.print("MPP = "); Serial.println(motor_power);
+    // printPackageMetaInfo(packet_size);
     
     udp_server.beginPacket(udp_server.remoteIP(), udp_server.remotePort());
     udp_server.write(sensor_values.c_str(), sensor_values.length());
     udp_server.endPacket();
   }
+
+  // DRIVE MOTOR USING PID AND ESTIMATE
+  // UDP READ ESTIMATE
+
 }
 /*
 void printSensorInfo (float[3] &accel) {
@@ -137,4 +163,8 @@ void printPackageMetaInfo(int packet_size)
   }
   Serial.print(", port ");
   Serial.println(udp_server.remotePort());
+}
+
+void udpComms () {
+
 }
