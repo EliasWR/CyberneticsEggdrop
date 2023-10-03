@@ -148,42 +148,51 @@ def generate_random_samples(n = 100):
 if __name__ == "__main__":
 
     A = np.zeros((3, 3))
-    H = np.array([[0, 0, 1]])
+    H_a = np.array([[1, 0, 0]])
+    H_d = np.array([[0, 0, 1]])
     Q = np.eye(3)
-    R = np.array([[0.015]])
+    R_d = np.array([[0.5]])
+    R_a = np.array([[0.0001]])
     P = np.zeros((3, 3))
     # acceleration, velocity, distance
-    x0 = np.array([0, 0, 30])
-    sigma_d = 250
-    sigma_a = 1.0
+    x0 = np.array([1.06, 0, 30])
+    sigma_d = 25
+    sigma_a = 100000
 
 
-    kalman = KalmanFilter(A, H, R, Q, P, x0, sigma=sigma_d)
+    kalman = KalmanFilter(A, H_a, R_a, Q, P, x0, sigma=sigma_a)
 
     # Load measurements from file
     
     accX, accY, accZ, dist = load_measurements_from_file("Project/SensorDataKalman.csv")
-    print(dist.shape)
+
     # Generate random samples
     # samples = generate_random_samples(100)
 
     # Filter the measurements
     estimates = []
-    for m in dist:
+    for m in accZ:
         est = kalman.filter_single(m)
         estimates.append(est)
-        #print(m, est)
+        print(m, est)
         #time.sleep(0.01)
+
     estimates = np.array(estimates)
     e_accZ = estimates[:, 0]
     e_dist = estimates[:, 2]
 
-    print(e_dist.shape)
-    print(dist.shape)
-
-    plt.plot(e_dist)
-    plt.plot(dist)
+    # Plot the the estimate and measurements in the two different plot
+    plt.figure(1)
+    plt.title("Distance estimation")
+    
+    plt.plot(accZ, label="Actual")
+    plt.plot(e_accZ, label="Estimation")
+    plt.legend()
+    
+    
     plt.show()
+
+
 
 
     
