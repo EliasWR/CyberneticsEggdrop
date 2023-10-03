@@ -183,13 +183,17 @@ if __name__ == "__main__":
 
     # Plot the the estimate and measurements in the two different plot
     plt.figure(1)
-    plt.title("Distance estimation")
+    plt.title("Acceleration")
     
     plt.plot(accZ, label="Actual")
     plt.plot(e_accZ, label="Estimation")
     plt.legend()
     
-    
+    plt.figure(2)
+    plt.title("Distance estimation")
+    plt.plot(e_dist, label="Estimation")
+    plt.plot(dist, label="Actual")
+    plt.legend()
     plt.show()
 
 
