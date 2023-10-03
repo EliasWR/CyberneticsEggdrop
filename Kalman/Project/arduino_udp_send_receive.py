@@ -39,14 +39,33 @@ def sensor_values_as_struct(sensor_values):
 def arduino_has_been_reset():
     print("Arduino is offline.. Resetting")
 
-#===================CODE=====================
+def writeSensorDataToFile ():
+    with open('SensorDataKalman30CM.csv', 'w', newline='') as f:
+        writer = csv.writer(f)
 
-with open('SensorDataKalman.csv', 'w', newline='') as f:
-    writer = csv.writer(f)
+        # Write the header row
+        writer.writerow(['AccX', 'AccY', 'AccZ', 'Dist'])
 
-    # Write the header row
-    writer.writerow(['AccX', 'AccY', 'AccZ', 'Dist'])
+        estimate = 0.0
+        delta = 1.0
+        while (True):
+            estimate = estimate + delta
+            if (estimate > 100.0):
+                delta = -1
+            elif (estimate < -100):
+                delta = 1
 
+            sensor_values = arduino_send_receive(estimate)
+
+            if (sensor_values is not None):
+                x, y, z, d = sensor_values_as_struct(sensor_values)
+                writer.writerow(sensor_values)
+                print(sensor_values)
+
+            else:
+                arduino_has_been_reset()
+
+def printSensorData ():
     estimate = 0.0
     delta = 1.0
     while (True):
@@ -57,14 +76,7 @@ with open('SensorDataKalman.csv', 'w', newline='') as f:
             delta = 1
 
         sensor_values = arduino_send_receive(estimate)
+        print(sensor_values)
 
-        if (sensor_values is not None):
-            x, y, z, d = sensor_values_as_struct(sensor_values)
-            writer.writerow(sensor_values)
-            print(sensor_values)
-
-        else:
-            arduino_has_been_reset()
-
-
-
+#printSensorData()
+writeSensorDataToFile()
