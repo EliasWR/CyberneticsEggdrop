@@ -102,41 +102,84 @@ class KalmanFilter:
         self.Q = self.sigma**2 * Q  
     
 
+def load_measurements_from_file(filename):
+    """
+    Load measurements from a file
+    """
+    measurements = []
+    with open(filename, "r") as f:
+        
+        f.readline()
+        for line in f:
+            arr = line.strip()
+            arr = arr.split(",")
+            measurements.append(arr)
+
+    measurements = np.array(measurements, dtype=np.float64)
+    return measurements
+
+def load_measurements_from_file(filename):
+    """
+    Load measurements from a file
+    """
+    measurements = []
+    with open(filename, "r") as f:
+        
+        f.readline()
+        for line in f:
+            arr = line.strip()
+            arr = arr.split(",")
+            measurements.append(arr)
+
+    measurements = np.array(measurements, dtype=np.float64)
+    return measurements[:, 0], measurements[:, 1], measurements[:, 2], measurements[:, 3]
+
+def generate_random_samples(n = 100):
+    """
+    Generate n number of perlin noise samples for testing
+    """
+    z = (np.random.randn(n) + 1) * 5
+    samples = np.zeros((n, 1))
+    for i in range(n):
+        samples[i] = np.array([z[i]])
+    return samples
+
+
 if __name__ == "__main__":
 
-    A = np.array([
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 1]
-    ])
-    H = np.array([[0, 0, 1]])
-    Q = np.eye(3) # Adjust as needed
-    R = np.array([[1]])
+    A = np.eye(3)
+    H = np.array([[1, 0, 0]])
+    Q = np.eye(3)
+    R = np.array([[0.02]])
     P = np.eye(3)
-    x0 = np.array([0, 0, 0])
-
-    kalman = KalmanFilter(A, H, R, Q, P, x0, sigma=15)
-
-    # Generate n number of perlin noise samples for testing
-    n = 100
-    z = (np.random.randn(n) + 1) * 5
-    measurements = np.zeros((n, 1))
-    for i in range(n):
-        measurements[i] = np.array([z[i]])
+    # acceleration, velocity, distance
+    x0 = np.array([1.05, 0, 30])
+    sigma_d = 250
+    sigma_a = 1.0
 
 
-    #measurements = [np.array([z]) for z in [1, 1.1, 2.9, 4.2, 5.1, 8.6, 5.2, 4.8 , 4.9, 5.1, 0.2, 5.2]]
-    #estimates = [kalman.filter_single(m) for m in measurements]
+    kalman = KalmanFilter(A, H, R, Q, P, x0, sigma=sigma_a)
+
+    # Load measurements from file
+    
+    accX, accY, accZ, dist = load_measurements_from_file("Project/SensorDataKalman.csv")
+    
+    # Generate random samples
+    # samples = generate_random_samples(100)
+
+    # Filter the measurements
     estimates = []
-    for m in measurements:
+    for m in accZ:
         est = kalman.filter_single(m)
         estimates.append(est)
         print(m, est)
         #time.sleep(0.1)
-    # Plot the estimates over 10 cycles of measurements
+    print(estimates)
+    #e_accZ = np.array(estimates[])
+    #e_dist = np.array(estimates[])
     
-    plt.plot([e[2] for e in estimates])
-    plt.plot([m for m in measurements])
+    #plt.plot([e for e in e_accZ])
+    plt.plot([m for m in accZ])
     plt.show()
 
 
