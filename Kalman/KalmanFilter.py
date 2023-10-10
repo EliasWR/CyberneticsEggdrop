@@ -17,15 +17,19 @@ class KalmanFilter:
         :param P0: Initial estimation error covariance
         :param X0: Initial state estimate
         """
+        self.sigma = sigma
+
         self.A = A
+        self.A = self._calculate_A(0.1)
         self.B = B
         self.H = H
         self.R = R
         self.Q = Q
+        self.Q = self._calculate_Q(0.1)
         self.P = P0
         self.x = x0
 
-        self.sigma = sigma
+        
 
         self.prev_time = time.time()
 
@@ -134,32 +138,46 @@ def generate_random_samples(n = 100):
 
 
 def testing():
-    A = np.array([[1, 1], [0, 1]]) # State transition matrix (m x m)
-    H = np.array([[1, 0]])         # Observation model (n x m)
-    R = np.array([[1]])            # Observation Noise Covariance (n x n)
-    Q = np.array([[0.0001, 0], [0, 0.001]])     # Process Noise Covariance (m x m)
-    P0 = np.array([[1, 0], [0, 1]]) # Initial estimation error covariance (m x m)
-    x0 = np.array([[0], [0]])       # Initial state estimate (m x 1)
+    # m = 3 (states), n = 2 (measurements)
+    A = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]) # State transition matrix (m x m)
+    H = np.array([[1, 0, 0],
+                  [0, 0, 1]])         # Observation model (n x m)
+
+    R = np.array([[1, 0],
+                  [0, 1]])            # Observation Noise Covariance (n x n)
+    Q = np.array([[0.1, 0, 0], [0, 0, 0], [0, 0, 0.001]])     # Process Noise Covariance (m x m)
+    P0 = np.array([[1, 0, 0], [0, 0, 0], [0, 0, 1]]) # Initial estimation error covariance (m x m)
+    x0 = np.array([[0], [0], [0]])       # Initial state estimate (m x 1)
+                                         # measurement (n x 1)
+
 
     kalman = KalmanFilter(A, H, R, Q, P0, x0)
 
     # Load measurements from file
-    measurements = load_measurements_from_file("SensorDataKalman.csv")
+    measurements = load_measurements_from_file("Project\\SensorDataKalmanTimestamped.csv")
     accX, accY, accZ, dist = measurements[:, 0], measurements[:, 1], measurements[:, 2], measurements[:, 3]
 
     # Filter the measurements treating each measurement as a single sample
+    zero = np.zeros((len(accZ), ))
+    use_measurements = np.array([[accZ], [dist]]).T
+
+
     estimates = []
-    for m in accZ:
-        est = kalman.filter_single(m)
+    for m in use_measurements:
+        est = kalman.filter_single(m.T)
         estimates.append(est)
-        print(m, est)
-        #time.sleep(0.01) # Simulate measurements coming in
+        #time.sleep(1) # Simulate measurements coming in
 
     # Extract the estimates
     estimates = np.array(estimates)
     accZ_hat = estimates[:, 0]
     vel_hat = estimates[:, 1]
     dist_hat = estimates[:, 2]
+
+    print("accZ_hat: ", accZ_hat.shape)
+    print("vel_hat: ", vel_hat.shape)
+    print("dist_hat: ", dist_hat.shape)
+
 
     # Plot the the acceleration, velocity and distance in the three different plots
     plt.figure(1)
