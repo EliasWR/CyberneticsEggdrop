@@ -20,12 +20,10 @@ class KalmanFilter:
         self.sigma = sigma
 
         self.A = A
-        self.A = self._calculate_A(0.1)
         self.B = B
         self.H = H
         self.R = R
         self.Q = Q
-        self.Q = self._calculate_Q(0.1)
         self.P = P0
         self.x = x0
 
