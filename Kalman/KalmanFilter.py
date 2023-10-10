@@ -38,25 +38,27 @@ class KalmanFilter:
         self._calculate_A(delta_t)
         self._calculate_Q(delta_t)
         
-        control = self.B @ self.u if self.B is not None and self.u is not None else 0
+        control = self.B @ self.u if (self.B is not None and self.u is not None) else 0
         self.x = self.A @ self.x + control              # x- = Ax + Bu
         self.P = self.A @ self.P @ self.A.T + self.Q    # P- = AP_ A.T + Q
       
 
-
-    def update(self, measurement):
+    def correct(self, measurement):
         """
         Corrections based on the measurements ("A posteriori")
         """
-        self.predict()
-
         K = (self.P @ self.H.T) @ np.linalg.inv(self.H @ self.P @ self.H.T + self.R)
         estimate = self.H @ self.x
 
         self.x = self.x + K @ (measurement - estimate)
         self.P = self.P - K @ self.H @ self.P
 
-        
+
+    def update(self, measurement):
+
+        self.predict()              # A priori
+        self.correct(measurement)   # A posteriori
+
 
     def filter(self, measurements):
         """
@@ -105,6 +107,7 @@ class KalmanFilter:
 def load_measurements_from_file(filename):
     """
     Load measurements from a file
+    Returned as list 
     """
     measurements = []
     with open(filename, "r") as f:
@@ -118,25 +121,10 @@ def load_measurements_from_file(filename):
     measurements = np.array(measurements, dtype=np.float64)
     return measurements
 
-def load_measurements_from_file(filename):
-    """
-    Load measurements from a file
-    """
-    measurements = []
-    with open(filename, "r") as f:
-        
-        f.readline()
-        for line in f:
-            arr = line.strip()
-            arr = arr.split(",")
-            measurements.append(arr)
-
-    measurements = np.array(measurements, dtype=np.float64)
-    return measurements[:, 0], measurements[:, 1], measurements[:, 2], measurements[:, 3]
 
 def generate_random_samples(n = 100):
     """
-    Generate n number of perlin noise samples for testing
+    Generate n number of random samples for testing
     """
     z = (np.random.randn(n) + 1) * 5
     samples = np.zeros((n, 1))
@@ -145,56 +133,58 @@ def generate_random_samples(n = 100):
     return samples
 
 
-if __name__ == "__main__":
+def testing():
+    A = np.array([[1, 1], [0, 1]]) # State transition matrix (m x m)
+    H = np.array([[1, 0]])         # Observation model (n x m)
+    R = np.array([[1]])            # Observation Noise Covariance (n x n)
+    Q = np.array([[0.0001, 0], [0, 0.001]])     # Process Noise Covariance (m x m)
+    P0 = np.array([[1, 0], [0, 1]]) # Initial estimation error covariance (m x m)
+    x0 = np.array([[0], [0]])       # Initial state estimate (m x 1)
 
-    A = np.zeros((3, 3))
-    H_a = np.array([[1, 0, 0]])
-    H_d = np.array([[0, 0, 1]])
-    Q = np.eye(3)
-    R_d = np.array([[0.5]])
-    R_a = np.array([[0.0001]])
-    P = np.zeros((3, 3))
-    # acceleration, velocity, distance
-    x0 = np.array([1.06, 0, 30])
-    sigma_d = 25
-    sigma_a = 100000
-
-
-    kalman = KalmanFilter(A, H_a, R_a, Q, P, x0, sigma=sigma_a)
+    kalman = KalmanFilter(A, H, R, Q, P0, x0)
 
     # Load measurements from file
-    
-    accX, accY, accZ, dist = load_measurements_from_file("Project/SensorDataKalman.csv")
+    measurements = load_measurements_from_file("SensorDataKalman.csv")
+    accX, accY, accZ, dist = measurements[:, 0], measurements[:, 1], measurements[:, 2], measurements[:, 3]
 
-    # Generate random samples
-    # samples = generate_random_samples(100)
-
-    # Filter the measurements
+    # Filter the measurements treating each measurement as a single sample
     estimates = []
     for m in accZ:
         est = kalman.filter_single(m)
         estimates.append(est)
         print(m, est)
-        #time.sleep(0.01)
+        #time.sleep(0.01) # Simulate measurements coming in
 
+    # Extract the estimates
     estimates = np.array(estimates)
-    e_accZ = estimates[:, 0]
-    e_dist = estimates[:, 2]
+    accZ_hat = estimates[:, 0]
+    vel_hat = estimates[:, 1]
+    dist_hat = estimates[:, 2]
 
-    # Plot the the estimate and measurements in the two different plot
+    # Plot the the acceleration, velocity and distance in the three different plots
     plt.figure(1)
     plt.title("Acceleration")
-    
     plt.plot(accZ, label="Actual")
-    plt.plot(e_accZ, label="Estimation")
+    plt.plot(accZ_hat, label="Estimation")
+    plt.legend()
+
+    plt.figure(2)
+    plt.title("Velocity")
+    plt.plot(vel_hat, label="Estimation")
     plt.legend()
     
-    plt.figure(2)
-    plt.title("Distance estimation")
-    plt.plot(e_dist, label="Estimation")
+    plt.figure(3)
+    plt.title("Distance")
     plt.plot(dist, label="Actual")
+    plt.plot(dist_hat, label="Estimation")
     plt.legend()
+
     plt.show()
+
+
+
+if __name__ == "__main__":
+    testing()
 
 
 
