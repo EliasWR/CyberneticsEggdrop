@@ -1,5 +1,13 @@
 //#include <AVR_RTC.h>
 
+
+
+//*************************************
+// DC Motor PID position control example
+// By Øystein Bjelland, IIR, NTNU
+// Based on this example: https://curiores.com/dc-motor-control/ 
+//**************************************
+
 #include <util/atomic.h>
 #include "pid.h"
 #include "motor.h"
@@ -76,7 +84,7 @@ void loop(){
   bool btn_state = digitalRead(BTN_PIN);
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
     current_pos = posi;
-  }
+  } 
 
   switch (state)
   {

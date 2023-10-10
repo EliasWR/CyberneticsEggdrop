@@ -22,8 +22,6 @@ def arduino_send_receive(estimate):
     udp_socket.sendto(str(estimate).encode(), (arduino_ip, arduino_port))
     try:
         inbound_message, remote_address = udp_socket.recvfrom(24)
-        # returns an a values
-        # [accel_x, accel_y, accel_z, range_senrray with the followingsor]
         return np.array(inbound_message.decode('ascii').split(',')).astype(float)
     except Exception as e:
         print(e)
@@ -46,7 +44,7 @@ def arduino_has_been_reset():
     print("Arduino is offline.. Resetting")
 
 def writeSensorDataToFile ():
-    with open('SensorDataKalmanTimestamped.csv', 'w', newline='') as f:
+    with open('SensorDataKalmanTimestampedOscillating.csv', 'w', newline='') as f:
         writer = csv.writer(f)
 
         # Write the header row
@@ -56,20 +54,21 @@ def writeSensorDataToFile ():
         estimate = 0.0
         delta = 1.0
         while (True):
+            # Kalman filter data
             estimate = estimate + delta
             if (estimate > 100.0):
                 delta = -1
             elif (estimate < -100):
                 delta = 1
-
+            # Kalman filter data
             sensor_values = arduino_send_receive(estimate)
 
             if (sensor_values is not None):
-                x, y, z, d = sensor_values_as_struct(sensor_values)
-                writer.writerow(sensor_values)
+                # x, y, z, d = sensor_values_as_struct(sensor_values)
                 currentTime = time.time() - timeStart
                 sensor_values = arduino_send_receive(estimate)
                 sensor_values = np.append(sensor_values, currentTime)
+                writer.writerow(sensor_values)
                 print(sensor_values)
 
             else:
