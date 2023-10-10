@@ -5,6 +5,7 @@
 .idea
 
 temp*
+__pycache__/*
 
 .DS_Store
 # Matlab files
