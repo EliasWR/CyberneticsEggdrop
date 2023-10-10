@@ -1,5 +1,5 @@
-from Kalman.lib.kalman_filter import KalmanFilter
-from Kalman.lib.communication import UDP_communication
+from lib.kalman_filter import KalmanFilter
+from lib.communication import UDP_communication
 
 import numpy as np
 
@@ -55,8 +55,6 @@ def main():
             arduino.send_values(estimates)
     except KeyboardInterrupt:
         pass
-    
-    pass
 
 
 if __name__ == "__main__":
