@@ -86,7 +86,6 @@ void setup() {
   lastButtonState = buttonState;
   current_pos = 0;
   current_state = sSTOP;
-  delay(2000);
 }
 
 void loop() {
@@ -126,7 +125,7 @@ void loop() {
       if (goToZero() && buttonState == HIGH && lastButtonState == LOW && buttonFilterHasExpired()){
         startButtonFilter(100);
         current_state = sTO_TARGET;
-        target = targetList[targetNum++];
+        target = targetList[targetNum++]*ENCODER_RESOLUTION;
         
         targetNum %= nTARGETS;
 

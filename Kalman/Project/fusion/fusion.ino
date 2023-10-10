@@ -23,10 +23,10 @@
 
 volatile int32_t posi = 0;
 
-float Kp = 0.12; //Proportional gain // 0.12 // 0.18 
-float Ki = 0.06; //Integral gain // 0.06 // 0.01 // 0.12
-float Kd = 0.0; //Derivative gain
-float motorSpeedMax = 255;
+float Kp = 1.2; // 0.12; //Proportional gain // 0.12 // 0.18 
+float Ki = 0.6; // 0.06; //Integral gain // 0.06 // 0.01 // 0.12
+float Kd = 0.0; // 0.0; //Derivative gain
+float motorSpeedMax = 60;
 
 bool last_btn_state = HIGH; //Button state
 int32_t current_pos = 0; //Current position
@@ -155,7 +155,6 @@ void loop()
   }
 
   // DRIVE MOTOR USING PID AND ESTIMATE
-  // UDP READ ESTIMATE
   bool btn_state = digitalRead(BTN_PIN);
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
     current_pos = posi;
@@ -166,13 +165,14 @@ void loop()
   case IDLE:
     motor.stop();
     if(btn_state && !last_btn_state){
-      setState(SET_START_POS);
+      setState(SET_TARGET);
     }
     break;
 
   case SET_TARGET:
     motor.free();
     if(btn_state && !last_btn_state){
+      current_pos = 0;
       target = current_pos;
       setState(SET_START_POS);
     }
@@ -213,17 +213,23 @@ void loop()
     break;
 
   case RUN:
-    u = pid.update(current_pos, target);
+    float currentTime = millis();
+    float ocillatingTarget = oscillate(currentTime) * start_pos;
+    u = pid.update(current_pos, ocillatingTarget);
     motor.run(u);
-    /*
+    
     Serial.print(millis());
-    Serial.print(", ");
+    Serial.print("TARGET: , ");
     Serial.print(target);
+    Serial.print("OCILLATING TARGET: , ");
+    Serial.print(ocillatingTarget);
+    Serial.print("OCILLATION, ");
+    Serial.print(oscillate(currentTime));
     Serial.print(", ");
     Serial.print(u);
     Serial.print(", ");
     Serial.println(current_pos);
-    */
+    
     if(btn_state && !last_btn_state){
       setState(RUN_TO_START);
     }
@@ -287,7 +293,6 @@ void readEncoder(){
 void setState(int new_state){
   last_state = state;
   state = new_state;
-  /*
   Serial.print("State changed from ");
   Serial.print(stateStr(last_state));
   Serial.print(" to ");
@@ -297,7 +302,6 @@ void setState(int new_state){
   Serial.print("Current position: ");
   Serial.println(current_pos);
   Serial.println("");
-  */
   StateTimer.reset();
 }
 
@@ -344,4 +348,9 @@ String stateStr(int state){
     return "UNKNOWN";
     break;
   }
+}
+
+float oscillate(float t) {
+  const float w = PI/180 * t * 0.2;
+  return sin(w);
 }
