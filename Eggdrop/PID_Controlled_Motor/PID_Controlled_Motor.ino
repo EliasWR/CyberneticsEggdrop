@@ -1,13 +1,5 @@
 //#include <AVR_RTC.h>
 
-
-
-//*************************************
-// DC Motor PID position control example
-// By Øystein Bjelland, IIR, NTNU
-// Based on this example: https://curiores.com/dc-motor-control/ 
-//**************************************
-
 #include <util/atomic.h>
 #include "pid.h"
 #include "motor.h"
