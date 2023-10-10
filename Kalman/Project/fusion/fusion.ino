@@ -1,7 +1,11 @@
 // PC: 192.168.10.20
 // Arduino: 192.168.10.240
 // Subnet: 255.255.255.0
-
+/*
+TODO:
+  Legge inn bias
+  Få verdier fra Martin
+*/
 #include <HardWire.h>
 #include <I2C_MPU6886.h>
 #include <VL53L0X.h>
