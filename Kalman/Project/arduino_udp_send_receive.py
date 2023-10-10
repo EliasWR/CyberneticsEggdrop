@@ -44,7 +44,7 @@ def arduino_has_been_reset():
     print("Arduino is offline.. Resetting")
 
 def writeSensorDataToFile ():
-    with open('SensorDataKalmanTimestamped.csv', 'w', newline='') as f:
+    with open('SensorDataKalmanTimestampedOscillating.csv', 'w', newline='') as f:
         writer = csv.writer(f)
 
         # Write the header row
@@ -64,11 +64,11 @@ def writeSensorDataToFile ():
             sensor_values = arduino_send_receive(estimate)
 
             if (sensor_values is not None):
-                x, y, z, d = sensor_values_as_struct(sensor_values)
-                writer.writerow(sensor_values)
+                # x, y, z, d = sensor_values_as_struct(sensor_values)
                 currentTime = time.time() - timeStart
                 sensor_values = arduino_send_receive(estimate)
                 sensor_values = np.append(sensor_values, currentTime)
+                writer.writerow(sensor_values)
                 print(sensor_values)
 
             else:
@@ -90,5 +90,5 @@ def printSensorData ():
         sensor_values = np.append(sensor_values, currentTime)
         print(sensor_values)
 
-printSensorData()
-# writeSensorDataToFile()
+# printSensorData()
+writeSensorDataToFile()

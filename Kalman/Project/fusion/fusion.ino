@@ -26,7 +26,7 @@ volatile int32_t posi = 0;
 float Kp = 1.2; // 0.12; //Proportional gain // 0.12 // 0.18 
 float Ki = 0.6; // 0.06; //Integral gain // 0.06 // 0.01 // 0.12
 float Kd = 0.0; // 0.0; //Derivative gain
-float motorSpeedMax = 60;
+float motorSpeedMax = 80;
 
 bool last_btn_state = HIGH; //Button state
 int32_t current_pos = 0; //Current position
@@ -80,9 +80,7 @@ void setup()
   Ethernet.begin(mac, ip);
   delay(500);
   
-  if(!initialize())
-     while(true)
-       delay(10);
+  while(!initialize()) {delay(3000);}
 
   imu.begin();  
   range_sensor.startContinuous();
