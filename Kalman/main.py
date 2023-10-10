@@ -1,9 +1,10 @@
-from src.KalmanFilter import KalmanFilter
+from Kalman.lib.kalman_filter import KalmanFilter
+from Kalman.lib.communication import UDP_communication
+
 import numpy as np
 
 
 def get_from_arduino():
-
     print("Getting from Arduino")
     return np.array([[50],[0.3]])
 
@@ -43,14 +44,15 @@ def setup_kalman():
 
 def main():
     filter = setup_kalman()
+    arduino = UDP_communication()
 
     try:
         while True:
-            measurements = get_from_arduino()
+            measurements = arduino.receive()
 
             estimates = filter.filter_single(measurements)
 
-            send_to_arduino(estimates)
+            arduino.send_values(estimates)
     except KeyboardInterrupt:
         pass
     
