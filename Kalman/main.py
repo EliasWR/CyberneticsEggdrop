@@ -49,10 +49,10 @@ def main():
         arduino.send(1)
         while True:
             measurements = arduino.receive()
-            print("Measurements =", measurements)
-            estimates = filter.filter_single(measurements)
-            arduino.send_values(estimates)
-            print ("Estimates =", estimates)
+            if (measurements is not None):
+                measurements = measurements.reshape(2,1)
+                estimate = filter.filter_single(measurements)
+            arduino.send_values(estimate)
     except KeyboardInterrupt:
         pass
 

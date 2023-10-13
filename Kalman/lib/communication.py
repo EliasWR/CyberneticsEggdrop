@@ -19,8 +19,12 @@ class UDP_communication:
         if values is None:
             values = []
         # Convert all elements to strings before joining them
-        string_values = ','.join(str(value) for value in values)
-        self.send(string_values)
+        # string_values = ','.join(str(value) for value in values)
+        msg = float(values[0][0])
+        msg = format(msg, '.7f')
+        print (msg)
+        msg = str(msg)
+        self.send(msg)
 
 
     def send(self, string):

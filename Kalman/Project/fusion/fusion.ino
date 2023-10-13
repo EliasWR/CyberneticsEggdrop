@@ -31,6 +31,8 @@ float motorSpeedMax = 80;
 bool last_btn_state = HIGH; //Button state
 int32_t current_pos = 0; //Current position
 
+float estimatedPos;
+
 int last_state = 0;
 enum states {IDLE, SET_TARGET, SET_START_POS, RUN, RUN_TO_START, READY_FOR_DROP};
 int state = IDLE;
@@ -139,8 +141,7 @@ void loop()
 
     udp_server.read(packet_buffer, UDP_TX_PACKET_MAX_SIZE);
     // Les ut ønsket verdi
-    float estimatedPos = String(packet_buffer).toFloat();
-    Serial.println(packet_buffer);
+    estimatedPos = String(packet_buffer).toFloat();
     /*
     printVector3('A', accel);
     printVector3('G', gyro);
@@ -158,7 +159,7 @@ void loop()
   // DRIVE MOTOR USING PID AND ESTIMATE
   bool btn_state = digitalRead(BTN_PIN);
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
-    current_pos = posi;
+    current_pos = estimatedPos;
   }
 
   switch (state)
@@ -173,7 +174,7 @@ void loop()
   case SET_TARGET:
     motor.free();
     if(btn_state && !last_btn_state){
-      current_pos = 0;
+      current_pos = estimatedPos;
       target = current_pos;
       setState(SET_START_POS);
     }
