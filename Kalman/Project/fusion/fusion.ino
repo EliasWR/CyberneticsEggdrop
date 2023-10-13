@@ -133,18 +133,21 @@ void loop()
 
     String sensor_values;
     sensor_values.concat(accel[0]); sensor_values.concat(",");
-    sensor_values.concat(accel[1]); sensor_values.concat(",");
-    sensor_values.concat(accel[2]); sensor_values.concat(",");
+    // sensor_values.concat(accel[1]); sensor_values.concat(",");
+    // sensor_values.concat(accel[2]); sensor_values.concat(",");
     sensor_values.concat(d);
 
     udp_server.read(packet_buffer, UDP_TX_PACKET_MAX_SIZE);
-    float motor_power = String(packet_buffer).toFloat();
-    
+    // Les ut ønsket verdi
+    float estimatedPos = String(packet_buffer).toFloat();
+    Serial.println(packet_buffer);
+    /*
     printVector3('A', accel);
     printVector3('G', gyro);
     printScalar('T', t);
     printScalar('D', d);
     Serial.print("MPP = "); Serial.println(motor_power);
+    */
     // printPackageMetaInfo(packet_size);
     
     udp_server.beginPacket(udp_server.remoteIP(), udp_server.remotePort());
@@ -215,7 +218,7 @@ void loop()
     float ocillatingTarget = oscillate(currentTime) * start_pos;
     u = pid.update(current_pos, ocillatingTarget);
     motor.run(u);
-    
+    /*
     Serial.print(millis());
     Serial.print("TARGET: , ");
     Serial.print(target);
@@ -227,7 +230,7 @@ void loop()
     Serial.print(u);
     Serial.print(", ");
     Serial.println(current_pos);
-    
+    */
     if(btn_state && !last_btn_state){
       setState(RUN_TO_START);
     }

@@ -1,7 +1,6 @@
 import time
 from socket import *
 import numpy as np
-import csv
 
 ARDUINO_IP = '192.168.10.240'
 ARDUINO_PORT = 8888
@@ -16,9 +15,12 @@ class UDP_communication:
         self.arduino_ip = ip
         self.arduino_port = port
 
-    
-    def send_values(self, values = []):
-        self.send(','.join(values))
+    def send_values(self, values=None):
+        if values is None:
+            values = []
+        # Convert all elements to strings before joining them
+        string_values = ','.join(str(value) for value in values)
+        self.send(string_values)
 
 
     def send(self, string):

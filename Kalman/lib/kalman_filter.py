@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 
 KALMAN_ROOT = Path(__file__).parent.parent
-test_file = KALMAN_ROOT / "data" / "SensorDataKalmanTimestamped.csv"
+test_file = KALMAN_ROOT / "data" / "SensorDataKalmanTimestampedOscillating.csv"
 
 
 class KalmanFilter:
@@ -118,21 +118,33 @@ class KalmanFilter:
 
 def load_measurements_from_file(filename):
     """
-    Load measurements from a file
-    Returned as list 
+    Load measurements from a file, including timestamps.
+    Returned as a NumPy array.
     """
     measurements = []
+
     with open(filename, "r") as f:
-
-        f.readline()
+        f.readline()  # skip the header
         for line in f:
-            arr = line.strip()
-            arr = arr.split(",")
-            measurements.append(arr)
+            arr = line.strip().split(",")
 
-    measurements = np.array(measurements, dtype=np.float64)
-    return measurements
+            # Convert all values to float, including timestamps
+            try:
+                float_data = [float(item) for item in arr]
+                measurements.append(float_data)
+            except ValueError as e:
+                print(f"Error converting data to float: {e}, line: {line}")
+                # Handle or log error as appropriate, possibly continue to next line
 
+    # Convert list to NumPy array
+    try:
+        measurements_array = np.array(measurements, dtype=np.float64)
+    except ValueError as e:
+        print(f"Error creating NumPy array: {e}")
+        # Handle or log error as appropriate
+        return None  # or an empty array, or however you wish to indicate failure
+
+    return measurements_array
 
 def generate_random_samples(n=100):
     """
@@ -172,7 +184,7 @@ def testing():
 
     # Load measurements from file
     measurements = load_measurements_from_file(test_file)
-    accX, accY, accZ, dist = measurements[:, 0], measurements[:,1], measurements[:, 2], measurements[:, 3]
+    accX, accY, accZ, dist, time = measurements[:, 0], measurements[:,1], measurements[:, 2], measurements[:, 3], measurements[:,4]
 
     # Filter the measurements treating each measurement as a single sample
     zero = np.zeros((len(accZ), ))
