@@ -12,18 +12,21 @@ class Motor{
             in2Pin = in2_pin;
         }
 
-        void run(int u){
+        void run(float u)
+        {
             int dir;
-            if(u == 1){
+            if(u > 0){
                 dir = UP;
             }
-            else if(dir == -1){
+            else{
                 dir = DOWN;
             }
-            run((0 < u) - (0 > u), fabs(u));
+
+            run((0 < u) - (0 > u), abs(int(u)));
         }
 
         void run(int dir, int pwmVal){
+
             analogWrite(pwmPin, pwmVal);
             if(dir == 1){
                 digitalWrite(in1Pin, LOW);

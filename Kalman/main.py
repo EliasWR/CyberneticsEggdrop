@@ -3,7 +3,6 @@ from lib.communication import UDP_communication
 
 import numpy as np
 
-
 def get_from_arduino():
     print("Getting from Arduino")
     return np.array([[50],[0.3]])
@@ -47,12 +46,17 @@ def main():
     arduino = UDP_communication()
 
     try:
+        arduino.send(1)
         while True:
+            estimate = None
             measurements = arduino.receive()
 
-            estimates = filter.filter_single(measurements)
-
-            arduino.send_values(estimates)
+            if (measurements is not None):
+                measurements = measurements.reshape(2,1)
+                estimate = filter.filter_single(measurements)
+            
+            if (estimate is not None):
+                arduino.send_values(estimate)
     except KeyboardInterrupt:
         pass
 

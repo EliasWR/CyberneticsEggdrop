@@ -10,3 +10,6 @@ __pycache__/*
 .DS_Store
 # Matlab files
 *.asv
+
+
+__pycache__*
