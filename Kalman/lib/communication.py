@@ -1,5 +1,6 @@
 import time
 from socket import *
+
 import numpy as np
 
 ARDUINO_IP = '192.168.10.240'
@@ -15,6 +16,8 @@ class UDP_communication:
         self.arduino_ip = ip
         self.arduino_port = port
 
+        print(f"Established connection with Arduino at {self.arduino_ip}:{self.arduino_port}")
+
     def send_values(self, values=None):
         if values is None:
             values = []
@@ -22,14 +25,18 @@ class UDP_communication:
         # string_values = ','.join(str(value) for value in values)
         msg = float(values[0][0])
         msg = format(msg, '.7f')
-        print (msg)
+        # print (msg)
         msg = str(msg)
         self.send(msg)
 
 
     def send(self, string):
-        self.udp_socket.sendto(str(string).encode(), (self.arduino_ip, self.arduino_port))
-        
+        try:
+            self.udp_socket.sendto(str(string).encode(), (self.arduino_ip, self.arduino_port))
+        except timeout as e:
+            print("Timeout when sending to Arduino", e)
+        except Exception as e:
+            print(e)
         
     def receive(self):
         try:
@@ -37,6 +44,9 @@ class UDP_communication:
             # returns an a values
             # [accel_x, accel_y, accel_z, range_senrray with the followingsor]
             return np.array(inbound_message.decode('ascii').split(',')).astype(float)
+        except timeout as e:
+            print("Timeout when receiving from Arduino", e)
+            return None
         except Exception as e:
             print(e)
             return None

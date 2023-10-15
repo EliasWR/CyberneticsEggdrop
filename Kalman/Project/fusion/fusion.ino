@@ -16,10 +16,14 @@
 
 #define ENCA 2        //Encoder pinA
 #define ENCB 3        //Encoder pinB
-#define PWM 10        //motor PWM pin
+#define PWM 9         //motor PWM pin
 #define IN2 23        //motor controller pin2
 #define IN1 22        //motor controller pin1
 #define BTN_PIN 7     //button pin
+
+
+const float BIAS_IMU_X = 0.066219512;  // =AVERAGE(C2:C247)
+
 
 volatile int32_t posi = 0;
 
@@ -30,11 +34,23 @@ float motorSpeedMax = 80;
 
 bool last_btn_state = HIGH; //Button state
 int32_t current_pos = 0; //Current position
+bool packet_parse_ready = true;
 
 float estimatedPos;
+const int NUM_OSCILLATIONS = 5;
+uint8_t half_oscillation_counter = 0;
+uint8_t oscillation_dir = 0;
+float last_oscillation_target = 0;
+
+const float OSCILLATION_BASE = 200;
+const float OSCILLATION_AMPLITUDE = 100;
+const float FINAL_TARGET = 320;
+bool to_final = false;
+
+uint32_t oscillation_start = 0;
 
 int last_state = 0;
-enum states {IDLE, SET_TARGET, SET_START_POS, RUN, RUN_TO_START, READY_FOR_DROP};
+enum states {IDLE, SET_TARGET, SET_START_POS, RUN_OSCILLATION, RUN_TO_FINAL, RUN_TO_START, READY_FOR_DROP};
 int state = IDLE;
 
 PID pid(Kp, Ki, Kd, -motorSpeedMax, motorSpeedMax);  //PID controller
@@ -56,6 +72,11 @@ byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 EthernetUDP udp_server;
 
 char packet_buffer[UDP_TX_PACKET_MAX_SIZE];
+
+float range_sensor_bias(float distance)
+{
+  return -24.1346 + 5.5445*log(distance);
+}
 
 void setup() 
 {
@@ -117,21 +138,22 @@ bool initialize()
     Serial.println("Ethernet::LinkOn");
   return true;
 }
-  
-void loop() 
-{ 
-  int packet_size = udp_server.parsePacket();
-  if(packet_size)
-  {
+
+void sendSensorValues(){
     float accel[3];
     float gyro[3];
     float t;
     float d;
   
+    // The imu is rotated so that the x-axis (accel[0]) is up/down
     imu.getAccel(&accel[0], &accel[1], &accel[2]);      // Acceleration in X,Y,Z axis
     imu.getGyro(&gyro[0], &gyro[1], &gyro[2]);          // Gyro in X,Y,Z axis
     imu.getTemp(&t);                                    // Temperature
     d = range_sensor.readRangeContinuousMillimeters();  // Distance sensor
+
+    accel[0] = accel[0] - BIAS_IMU_X;
+    d = d - range_sensor_bias(d);
+    
 
     String sensor_values;
     sensor_values.concat(accel[0]); sensor_values.concat(",");
@@ -139,28 +161,42 @@ void loop()
     // sensor_values.concat(accel[2]); sensor_values.concat(",");
     sensor_values.concat(d);
 
-    udp_server.read(packet_buffer, UDP_TX_PACKET_MAX_SIZE);
-    // Les ut ønsket verdi
-    estimatedPos = String(packet_buffer).toFloat();
-    /*
-    printVector3('A', accel);
-    printVector3('G', gyro);
-    printScalar('T', t);
-    printScalar('D', d);
-    Serial.print("MPP = "); Serial.println(motor_power);
-    */
-    // printPackageMetaInfo(packet_size);
-    
     udp_server.beginPacket(udp_server.remoteIP(), udp_server.remotePort());
     udp_server.write(sensor_values.c_str(), sensor_values.length());
     udp_server.endPacket();
+
+}
+
+int readUDPPacket(){
+  int packet_size = udp_server.parsePacket();
+  if (packet_size)
+  {
+    udp_server.read(packet_buffer, UDP_TX_PACKET_MAX_SIZE);
+    // Les ut ønsket verdi
+    estimatedPos = String(packet_buffer).toFloat();
+    return estimatedPos;
   }
+  return -1;
+}
+  
+void loop() 
+{ 
+  //delay(10);
+  sendSensorValues();
+
+  int received = readUDPPacket();
+  if (received != -1)
+  {
+    current_pos = received;
+  }
+ 
+
+
 
   // DRIVE MOTOR USING PID AND ESTIMATE
   bool btn_state = digitalRead(BTN_PIN);
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
-    current_pos = estimatedPos;
-  }
+  // ATOMIC_BLOCK(ATOMIC_RESTORESTATE){ current_pos = posi; } // Read encoder position
+  current_pos = estimatedPos;
 
   switch (state)
   {
@@ -174,7 +210,7 @@ void loop()
   case SET_TARGET:
     motor.free();
     if(btn_state && !last_btn_state){
-      current_pos = estimatedPos;
+      //current_pos = estimatedPos;
       target = current_pos;
       setState(SET_START_POS);
     }
@@ -192,52 +228,135 @@ void loop()
   case READY_FOR_DROP:
     motor.free();
     if(btn_state && !last_btn_state){
-      setState(RUN);
+      oscillation_start = millis();
+      setState(RUN_OSCILLATION);
     }
     break;
 
   case RUN_TO_START:
     u = pid.update(current_pos, start_pos);
     motor.run(u);
-    /*
-    Serial.print(millis());
-    Serial.print(", ");
-    Serial.print(target);
-    Serial.print(", ");
-    Serial.print(u);
-    Serial.print(", ");
-    Serial.println(current_pos);
-    */
+
     if((current_pos <= start_pos + target_threshold && current_pos >= start_pos - target_threshold) or (btn_state && !last_btn_state)){
       motor.stop();
       setState(READY_FOR_DROP);
     }
     break;
 
-  case RUN:
+
+  case RUN_OSCILLATION:
+    
     float currentTime = millis();
-    float ocillatingTarget = oscillate(currentTime) * start_pos;
-    u = pid.update(current_pos, ocillatingTarget);
-    motor.run(u);
+    
+    if (!to_final ){
+      if (half_oscillation_counter < NUM_OSCILLATIONS * 2)
+      {
+        float oscillatingTarget = oscillate(currentTime - oscillation_start) * OSCILLATION_AMPLITUDE + OSCILLATION_BASE;
+        if (oscillation_dir == 0)
+        {
+          if (oscillatingTarget < last_oscillation_target)
+          {
+            oscillation_dir = 1;
+            half_oscillation_counter++;
+            Serial.print("Half oscillation counter: ");
+            Serial.println(half_oscillation_counter);
+          }
+        }
+        else if (oscillation_dir == 1)
+        {
+          if (oscillatingTarget > last_oscillation_target)
+          {
+            oscillation_dir = 0;
+            half_oscillation_counter++;
+            Serial.print("Half oscillation counter: ");
+            Serial.println(half_oscillation_counter);
+          }
+        }
+        last_oscillation_target = oscillatingTarget;
+
+        u = pid.update(current_pos, oscillatingTarget);
+      
+        motor.run(u);
+      }
+
+      else
+      {
+
+        target = FINAL_TARGET;
+        to_final = true;
+      }
+    }
+    else
+    {
+      u = pid.update(current_pos, target);
+      motor.run(u);
+
+      
+      Serial.print(millis());
+      Serial.print("| TARGET: ");
+      Serial.print(target);
+      Serial.print(", CURRENT: ");
+      Serial.print(current_pos);
+      Serial.print(", U:");
+      Serial.println(u);
+      
+
+      if((btn_state && !last_btn_state)){
+        motor.stop();
+        to_final = false;
+        half_oscillation_counter = 0;
+        setState(READY_FOR_DROP);
+        break;
+      }
+    }
+
+
     /*
     Serial.print(millis());
-    Serial.print("TARGET: , ");
+    Serial.print("TARGET: ");
     Serial.print(target);
-    Serial.print("OCILLATING TARGET: , ");
-    Serial.print(ocillatingTarget);
-    Serial.print("OCILLATION, ");
-    Serial.print(oscillate(currentTime));
+    Serial.print(", OSCILLATING TARGET: ");
+    Serial.print(oscillatingTarget);
     Serial.print(", ");
     Serial.print(u);
     Serial.print(", ");
     Serial.println(current_pos);
     */
+
+    // Serial plotter:
+    //Serial.println(oscillatingTarget);
+    //Serial.println(current_pos);
+
     if(btn_state && !last_btn_state){
-      setState(RUN_TO_START);
+      setState(READY_FOR_DROP);
     }
     break;
 
+  case RUN_TO_FINAL:
+    Serial.println("RUN_TO_FINAL looping");
+    break;
+    u = pid.update(current_pos, target);
+    motor.run(u);
+
+    
+    Serial.print(millis());
+    Serial.print("| TARGET: ");
+    Serial.print(target);
+    Serial.print(", CURRENT: ");
+    Serial.print(current_pos);
+    Serial.print(", U:");
+    Serial.println(u);
+    
+
+    if((btn_state && !last_btn_state)){
+      motor.stop();
+      setState(READY_FOR_DROP);
+    }
+    break;
+
+
   default:
+    Serial.println("Unknown state");
     break;
   }
   last_btn_state = btn_state;
@@ -337,14 +456,17 @@ String stateStr(int state){
   case SET_START_POS:
     return "SET_START_POS";
     break;
-  case RUN:
-    return "RUN";
+  case RUN_OSCILLATION:
+    return "RUN_OSCILLATION";
     break;
   case RUN_TO_START:
     return "RUN_TO_START";
     break;
   case READY_FOR_DROP:
     return "READY_FOR_DROP";
+    break;
+  case RUN_TO_FINAL:
+    return "RUN_TO_FINAL";
     break;
   default:
     return "UNKNOWN";
@@ -353,6 +475,6 @@ String stateStr(int state){
 }
 
 float oscillate(float t) {
-  const float w = PI/180 * t * 0.2;
+  const float w = PI/180 * t * 0.15;
   return sin(w);
 }

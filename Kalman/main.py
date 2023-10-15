@@ -48,11 +48,15 @@ def main():
     try:
         arduino.send(1)
         while True:
+            estimate = None
             measurements = arduino.receive()
+
             if (measurements is not None):
                 measurements = measurements.reshape(2,1)
                 estimate = filter.filter_single(measurements)
-            arduino.send_values(estimate)
+            
+            if (estimate is not None):
+                arduino.send_values(estimate)
     except KeyboardInterrupt:
         pass
 
