@@ -5,7 +5,7 @@
 clear; clc; close all;
 
 %% Import dataset
-filename = "serial_data1.csv";
+filename = "serial_data copy.csv";
 dataset = importdata(filename, ',').data;
 
 %% Manipulate data
@@ -121,3 +121,19 @@ grid on
 hold off
 legend('uncontrolled system' ,'controlled system')
 
+%% Transferfunction 1
+figure (3);
+pid = pidtune(tf6,'PI')
+fb = feedback(pid*tf6, H)
+step(fb)
+grid on;
+%hold on;
+legend('tf6')
+
+% Transferfunction 2
+%pid = pidtune(tf8,'PI')
+%fb = feedback(pid*tf8, H)
+%step(fb)
+%grid on;
+%hold off;
+%legend('tf6', 'tf8')
